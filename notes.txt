@@ -1,0 +1,1012 @@
+
+ArrayList!int
+φ(add_at(i₁,v₁)/r₁, add_at(i₂,v₂)/r₂): i₁ = i₂∧ v₁ = v₂
+φ(add_at(i₁,v₁)/r₁, get(i₂)/r₂): i₂ < i₁
+φ(add_at(i₁,v₁)/r₁, indexOf(v₂)/r₂): r₂ < i₁∧ v₁ ≠ v₂
+φ(add_at(i₁,v₁)/r₁, lastIndexOf(v₂)/r₂): r₂ < i₁∧ v₁ ≠ v₂
+φ(add_at(i₁,v₁)/r₁, remove_at(i₂)/r₂): false
+φ(add_at(i₁,v₁)/r₁, set(i₂,x₂)/r₂): i₂ < i₁
+φ(add_at(i₁,v₁)/r₁, size()/r₂): false
+φ(get(i₁)/r₁, get(i₂)/r₂): true
+φ(get(i₁)/r₁, indexOf(v₂)/r₂): true
+φ(get(i₁)/r₁, lastIndexOf(v₂)/r₂): true
+φ(get(i₁)/r₁, remove_at(i₂)/r₂): i₁ < i₂
+φ(get(i₁)/r₁, set(i₂,x₂)/r₂): i₁ ≠ i₂∨ r₂ = x₂
+φ(get(i₁)/r₁, size()/r₂): true
+φ(indexOf(v₁)/r₁, indexOf(v₂)/r₂): true
+φ(indexOf(v₁)/r₁, lastIndexOf(v₂)/r₂): true
+φ(indexOf(v₁)/r₁, remove_at(i₂)/r₂): false
+φ(indexOf(v₁)/r₁, set(i₂,x₂)/r₂): r₁ ≠ r₂∧ r₁ = v₁∧ r₁ ≤ r₂∧ r₂ < i₂∨ r₂ ≠ v₁∧ v₁ ≠ x₂∨ r₂ = x₂
+φ(indexOf(v₁)/r₁, size()/r₂): true
+φ(lastIndexOf(v₁)/r₁, lastIndexOf(v₂)/r₂): true
+φ(lastIndexOf(v₁)/r₁, remove_at(i₂)/r₂): false
+φ(lastIndexOf(v₁)/r₁, set(i₂,x₂)/r₂): i₂ < r₁∨ r₂ ≠ v₁∧ v₁ ≠ x₂∨ r₂ = x₂
+φ(lastIndexOf(v₁)/r₁, size()/r₂): true
+φ(remove_at(i₁)/r₁, remove_at(i₂)/r₂): i₁ = i₂
+φ(remove_at(i₁)/r₁, set(i₂,x₂)/r₂): i₂ < i₁
+φ(remove_at(i₁)/r₁, size()/r₂): false
+φ(set(i₁,x₁)/r₁, set(i₂,x₂)/r₂): i₁ ≠ i₂∨ r₁ = x₁∧ r₂ = x₂
+φ(set(i₁,x₁)/r₁, size()/r₂): true
+φ(size()/r₁, size()/r₂): true
+
+
+ArrayList!int
+φ(add_at(i₁,v₁)/r₁, add_at(i₂,v₂)/r₂): i₁ = i₂∧ v₁ = v₂
+φ(add_at(i₁,v₁)/r₁, get(i₂)/r₂): i₂ < i₁
+φ(add_at(i₁,v₁)/r₁, indexOf(v₂)/r₂): r₂ < i₁∧ v₁ ≠ v₂
+φ(add_at(i₁,v₁)/r₁, lastIndexOf(v₂)/r₂): r₂ < i₁∧ v₁ ≠ v₂
+φ(add_at(i₁,v₁)/r₁, remove_at(i₂)/r₂): true
+φ(add_at(i₁,v₁)/r₁, set(i₂,x₂)/r₂): i₂ < i₁
+φ(add_at(i₁,v₁)/r₁, size()/r₂): false
+φ(get(i₁)/r₁, get(i₂)/r₂): true
+φ(get(i₁)/r₁, indexOf(v₂)/r₂): true
+φ(get(i₁)/r₁, lastIndexOf(v₂)/r₂): true
+φ(get(i₁)/r₁, remove_at(i₂)/r₂): true
+φ(get(i₁)/r₁, set(i₂,x₂)/r₂): i₁ ≠ i₂∨ r₂ = x₂
+φ(get(i₁)/r₁, size()/r₂): true
+φ(indexOf(v₁)/r₁, indexOf(v₂)/r₂): true
+φ(indexOf(v₁)/r₁, lastIndexOf(v₂)/r₂): true
+φ(indexOf(v₁)/r₁, remove_at(i₂)/r₂): true
+φ(indexOf(v₁)/r₁, set(i₂,x₂)/r₂): r₂ ≠ v₁∧ v₁ ≠ x₂∨ r₂ = x₂
+φ(indexOf(v₁)/r₁, size()/r₂): true
+φ(lastIndexOf(v₁)/r₁, lastIndexOf(v₂)/r₂): true
+φ(lastIndexOf(v₁)/r₁, remove_at(i₂)/r₂): true
+φ(lastIndexOf(v₁)/r₁, set(i₂,x₂)/r₂): i₂ < r₁∨ r₂ ≠ v₁∧ v₁ ≠ x₂∨ r₂ = x₂
+φ(lastIndexOf(v₁)/r₁, size()/r₂): true
+φ(remove_at(i₁)/r₁, remove_at(i₂)/r₂): true
+φ(remove_at(i₁)/r₁, set(i₂,x₂)/r₂): i₁ ≠ i₂
+φ(remove_at(i₁)/r₁, size()/r₂): false
+φ(set(i₁,x₁)/r₁, set(i₂,x₂)/r₂): i₁ ≠ i₂∨ r₁ = r₂∧ x₁ = x₂
+φ(set(i₁,x₁)/r₁, size()/r₂): true
+φ(size()/r₁, size()/r₂): true
+
+
+
+
+ArrayList!int
+φ(add_at(i₁,v₁)/r₁, add_at(i₂,v₂)/r₂): i₁ = i₂∧ v₁ = v₂
+φ(add_at(i₁,v₁)/r₁, get(i₂)/r₂): i₂ < i₁
+φ(add_at(i₁,v₁)/r₁, indexOf(v₂)/r₂): r₂ < i₁
+φ(add_at(i₁,v₁)/r₁, lastIndexOf(v₂)/r₂): r₂ < i₁∧ v₁ ≠ v₂
+φ(add_at(i₁,v₁)/r₁, remove_at(i₂)/r₂): i₂ < v₁∧ r₁∧ r₂∧ v₁ < i₁
+φ(add_at(i₁,v₁)/r₁, set(i₂,x₂)/r₂): i₂ < i₁
+φ(add_at(i₁,v₁)/r₁, size()/r₂): false
+φ(get(i₁)/r₁, get(i₂)/r₂): true
+φ(get(i₁)/r₁, indexOf(v₂)/r₂): true
+φ(get(i₁)/r₁, lastIndexOf(v₂)/r₂): true
+φ(get(i₁)/r₁, remove_at(i₂)/r₂): true
+φ(get(i₁)/r₁, set(i₂,x₂)/r₂): i₁ ≠ i₂∨ r₂ = x₂
+φ(get(i₁)/r₁, size()/r₂): true
+φ(indexOf(v₁)/r₁, indexOf(v₂)/r₂): true
+φ(indexOf(v₁)/r₁, lastIndexOf(v₂)/r₂): true
+φ(indexOf(v₁)/r₁, remove_at(i₂)/r₂): true
+φ(indexOf(v₁)/r₁, set(i₂,x₂)/r₂): i₂ ≠ r₁∧ r₁ = r₂∨ r₂ ≠ v₁∧ v₁ ≠ x₂∨ r₂ = x₂
+
+
+// TODO: check if intSymmetric really makes those redundant ---------------------------/
+bool isStrictHelpful(alias incompat)(Terminal a, Terminal b){
+	foreach(k,v;map){
+		if(!(k.a[a]<k.a[b]&&k.a.areAdjacent(a,b))) continue;
+		if(incompat(v,get(k.a.swap(a,b)))&&incompat(v,get(k.a.updateAll(a,k.a[b]))))
+			return true;
+	}
+	return false;
+}
+
+bool isNonStrictHelpful(Terminal a, Terminal b){ // TODO: non-occam mode?
+	foreach(k,v;map){
+		if(!(k.a[a]<k.a[b]&&k.a.areAdjacent(a,b))) continue;
+		auto w=get(k.a.updateAll(a,k.a[b]));
+		auto x=get(k.a.swap(a,b));
+		if(incompat(v,x)&&v==w) return true;
+	}
+	return false;
+}
+// ---------------------------------------------------------------/
+
+
+x²+2 = (x+2)²
+
+x²+2 = x²+4x+4
+
+
+      ½y²-4
+x :=  ──────
+      z³-¾w²
+
+// Occam specs:
+Set!int
+φ(has(e₁)/r₁, has(e₂)/r₂): true
+φ(has(e₁)/r₁, add(e₂)/r₂): e₁ ≠ e₂∨ ¬ r₂
+φ(has(e₁)/r₁, remove(e₂)/r₂): e₁ ≠ e₂∨ ¬ r₂
+φ(has(e₁)/r₁, size()/r₂): true
+φ(add(e₁)/r₁, add(e₂)/r₂): e₁ ≠ e₂∨ ¬ r₁∧ ¬ r₂
+φ(add(e₁)/r₁, remove(e₂)/r₂): e₁ ≠ e₂
+φ(add(e₁)/r₁, size()/r₂): ¬ r₁
+φ(remove(e₁)/r₁, remove(e₂)/r₂): e₁ ≠ e₂∨ ¬ r₁∧ ¬ r₂
+φ(remove(e₁)/r₁, size()/r₂): ¬ r₁
+φ(size()/r₁, size()/r₂): true
+MultiSet!int
+φ(num(e₁)/r₁, num(e₂)/r₂): true
+φ(num(e₁)/r₁, add(e₂)/r₂): e₁ ≠ e₂
+φ(num(e₁)/r₁, remove(e₂)/r₂): e₁ ≠ e₂∨ ¬ r₂
+φ(num(e₁)/r₁, size()/r₂): true
+φ(add(e₁)/r₁, add(e₂)/r₂): e₁ ≠ e₂∨ ¬ r₁∧ ¬ r₂
+φ(add(e₁)/r₁, remove(e₂)/r₂): e₁ ≠ e₂
+φ(add(e₁)/r₁, size()/r₂): false
+φ(remove(e₁)/r₁, remove(e₂)/r₂): e₁ ≠ e₂∨ r₁∧ r₂∨ ¬ r₁∧ ¬ r₂
+φ(remove(e₁)/r₁, size()/r₂): ¬ r₁
+φ(size()/r₁, size()/r₂): true
+MaxRegister!int
+φ(get()/r₁, get()/r₂): true
+φ(get()/r₁, set(v₂)/r₂): v₂ ≤ r₂
+φ(set(v₁)/r₁, set(v₂)/r₂): v₁ ≤ r₁∧ v₂ ≤ r₂
+Map!(int, int)
+φ(get(key₁)/r₁, get(key₂)/r₂): true
+φ(get(key₁)/r₁, put(key₂,value₂)/r₂): key₁ ≠ key₂∨ r₂ = value₂
+φ(put(key₁,value₁)/r₁, put(key₂,value₂)/r₂): key₁ ≠ key₂∨ r₁ = value₁∧ r₂ = value₂
+RangeUpdate
+φ(add2(l₁,r₁)/r₁, add2(l₂,r₂)/r₂): true
+φ(add2(l₁,r₁)/r₁, square(l₂,r₂)/r₂): ¬ r₁∨ r₁ < l₂∨ ¬ r₂∨ r₂ < l₁
+φ(square(l₁,r₁)/r₁, square(l₂,r₂)/r₂): true
+
+
+
+
+
+// Occam specs:
+Set!int
+φ(has(e₁)/r₁, has(e₂)/r₂): true
+φ(has(e₁)/r₁, add(e₂)/r₂): e₁ ≠ e₂∨ ¬ r₂
+φ(has(e₁)/r₁, remove(e₂)/r₂): e₁ ≠ e₂∨ ¬ r₂
+φ(has(e₁)/r₁, size()/r₂): true
+φ(add(e₁)/r₁, add(e₂)/r₂): e₁ ≠ e₂∨ ¬ r₁∧ ¬ r₂
+φ(add(e₁)/r₁, remove(e₂)/r₂): e₁ ≠ e₂
+φ(add(e₁)/r₁, size()/r₂): ¬ r₁
+φ(remove(e₁)/r₁, remove(e₂)/r₂): e₁ ≠ e₂∨ ¬ r₁∧ ¬ r₂
+φ(remove(e₁)/r₁, size()/r₂): ¬ r₁
+φ(size()/r₁, size()/r₂): true
+MultiSet!int
+φ(num(e₁)/r₁, num(e₂)/r₂): true
+φ(num(e₁)/r₁, add(e₂)/r₂): e₁ ≠ e₂
+φ(num(e₁)/r₁, remove(e₂)/r₂): e₁ ≠ e₂∨ ¬ r₂
+φ(num(e₁)/r₁, size()/r₂): true
+φ(add(e₁)/r₁, add(e₂)/r₂): e₁ ≠ e₂∨ ¬ r₁∧ ¬ r₂
+φ(add(e₁)/r₁, remove(e₂)/r₂): e₁ ≠ e₂
+φ(add(e₁)/r₁, size()/r₂): false
+φ(remove(e₁)/r₁, remove(e₂)/r₂): e₁ ≠ e₂∨ r₁∧ r₂∨ ¬ r₁∧ ¬ r₂
+φ(remove(e₁)/r₁, size()/r₂): ¬ r₁
+φ(size()/r₁, size()/r₂): true
+MaxRegister!int
+φ(get()/r₁, get()/r₂): true
+φ(get()/r₁, set(v₂)/r₂): v₂ ≤ r₂
+φ(set(v₁)/r₁, set(v₂)/r₂): v₁ ≤ r₁∧ v₂ ≤ r₂
+Map!(int, int)
+φ(get(key₁)/r₁, get(key₂)/r₂): true
+φ(get(key₁)/r₁, put(key₂,value₂)/r₂): key₁ ≠ key₂∨ r₂ = value₂
+
+
+[e₁ = e₂, e₁ ≠ e₂, r₁ = r₂, r₁ ≠ r₂, e₁ = r₁, e₁ ≠ r₁, e₁ = r₂, e₁ ≠ r₂, e₂ = r₂, e₂ ≠ r₂, e₂ = r₁, e₂ ≠ r₁]
+
+
+// TODO: this is unsound: think more about it
+	bool[2] intEquatable(Terminal a, Terminal b){ 
+        bool[2] r=[true,true];
+	Lmapfor:foreach(k,v;map){
+			auto va=k.a[a], vb=k.a[b];
+			if(va<vb){
+				size_t nva=0,nvb=0;
+				foreach(t,val;k.a){
+					if(va<val && val<vb) continue Lmapfor;
+					if(val==va) nva++;
+					if(val==vb) nvb++;
+				}
+				if(nva>1||nvb>1) continue Lmapfor;
+				if(v.incompat(get(k.a.update(a,vb)))){
+					if(v==Quat.no) r[0]=false;
+					else{ assert(v==Quat.yes); r[1]=false; }
+					if(!r[0]&&!r[1]) return r;
+				}
+			}
+		}
+		return r;
+	}
+
+time ./r
+φ(get()/r₁, get()/r₂): r₁ = r₂
+φ(get()/r₁, set(v₂)/r₂): r₁ = r₂∧ v₂ ≤ r₁
+φ(set(v₁)/r₁, set(v₂)/r₂): (r₁ < v₁∨ v₂ ≤ r₁)∧ r₁ = r₂∧ (v₁ ≤ v₂∨ v₂ ≤ r₁)
+
+real	7m7.066s
+user	7m6.225s
+sys	0m0.703s
+
+
+r₁ < v₁∧ r₁ = r₂∧ v₁ < v₂∨
+r₁ = r₂∧ r₁ ≠ v₁∧ v₁ = v₂∨
+r₁ = r₂∧ r₁ = v₂∨
+r₁ = r₂∧ v₁ < r₁∧ v₂ < r₁∨
+r₁ = r₂∧ v₂ < r₁∧ v₂ < v₁∨
+
+
+
+
+get/get:
+key₁ ≠ key₂∧ key₁ = r₁∨
+key₁ ≠ key₂∧ key₁ = r₂∨
+key₁ ≠ key₂∧ key₂ = r₁∨
+key₁ ≠ key₂∧ key₂ = r₂∨
+
+key₁ ≠ key₂∧ key₂ < r₁∧ r₁ < r₂∨
+key₁ ≠ key₂∧ key₂ < r₁∧ r₂ < key₁∨
+key₁ ≠ key₂∧ key₂ < r₂∧ r₁ < key₁∨
+key₁ ≠ key₂∧ r₁ < key₁∧ r₁ < key₂∨
+key₁ ≠ key₂∧ r₁ < key₁∧ r₂ < key₁∨
+key₁ ≠ key₂∧ r₁ < key₂∧ r₂ < key₂∨
+key₁ ≠ key₂∧ r₂ < key₁∧ r₂ < key₂∨
+key₁ ≠ key₂∧ r₂ < key₂∧ r₂ < r₁∨
+key₁ ≠ key₂∧ key₁ < r₂∧ r₁ < key₂∨
+key₁ ≠ key₂∧ key₁ < r₂∧ r₂ < r₁∨
+
+key₂ < key₁∧ key₂ < r₁∧ key₂ < r₂∨
+r₁ = r₂
+
+
+put/put, bounded exhaustive (-2,2,3) plus randomized exploration:
+r₁ = value₁∧ r₁ = value₂∧ r₁ = r₂∨ key₁ ≠ key₂
+
+
+put/put, bounded exhaustive exploration (-2,2,3) only:
+key₁ ≠ key₂∧ key₁ = r₁∧ ∨
+key₁ ≠ key₂∧ key₁ = r₂∧ ∨
+key₁ ≠ key₂∧ key₁ = value₁∨
+key₁ ≠ key₂∧ key₁ = value₂∨
+key₁ ≠ key₂∧ key₂ = r₁ ∨
+key₁ ≠ key₂∧ key₂ = r₂∨
+key₁ ≠ key₂∧ key₂ = value₁ ∨
+key₁ ≠ key₂∧ key₂ = value₂∨
+key₁ ≠ key₂∧ r₁ = r₂∨
+key₁ ≠ key₂∧ r₁ = value₁∨
+key₁ ≠ key₂∧ r₁ = value₂∨
+key₁ ≠ key₂∧ r₂ = value₁∨
+key₁ ≠ key₂∧ r₂ = value₂∨
+key₁ ≠ key₂∧ value₁ = value₂∨
+r₁ = value₁∧ r₁ = value₂∧ r₁ = r₂∨
+
+
+
+
+get/put:
+key₁ ≠ key₂∨
+r₁ = value₂∧ r₁ = r₂
+
+key₁ < r₂∧
+r₂ < key₁∧
+key₁ < value₂∧
+value₂ < r₁∧
+r₂ ≠ value₂∧
+r₂ < r₁∧
+value₂ < key₁∧
+key₁ ≠ r₁∨
+
+
+
+get/get: contradictions not eliminated:
+key₁ ≠ key₂∨
+key₁ < r₁∧ r₁ < key₁∨
+key₁ < r₂∧ r₂ < key₁∧ key₁ < r₁∨
+r₁ = r₂
+
+
+get/put:
+key₁ ≠ r₁∧ r₁ < r₂∧ key₁ ≠ r₂∧ r₂ ≠ value₂∧ key₁ ≠ value₂∧ r₁ < value₂∧ r₁ ≠ r₁∧ key₁ < r₁∧ key₁ < r₂∧ key₁ < value₂∧ key₁ ≠ key₁∨
+key₁ ≠ r₂∧ key₁ < value₂∧ value₂ < key₁∧ r₁ ≠ value₂∧ key₁ < r₁∧ r₂ ≠ value₂∧ r₂ < key₁∧ r₁ ≠ r₂∨
+key₁ ≠ value₂∧ r₁ < key₁∧ r₂ < r₁∧ key₁ < r₂∧ key₁ < r₁∧ value₂ < key₁∧ r₁ ≠ value₂ ∨
+r₁ = value₂∧ r₁ = r₂∨
+key₁ ≠ key₂∨
+
+
+key₁ = value₂∧ key₁ < r₁∧ key₁ ≠ r₂∧ r₁ < key₁∧ key₁ < r₂∧ r₁ ≠ r₂∨
+key₁ < value₂∧ r₂ ≠ value₂∧ r₂ < key₁∧ key₁ < r₂∧ value₂ < key₁∨
+key₁ ≠ r₁∧ r₁ = r₂∧ r₁ = value₂∨
+key₁ = r₁∧ key₁ = value₂∧ key₁ = r₂∨
+key₁ ≠ key₂
+
+
+
+key₁ = r₁∧ key₁ = r₂∧ key₁ ≠ key₂
+key₁ = r₁∧ key₂ = r₂∧ key₁ ≠ key₂
+
+key₁ ≠ key₂
+
+trying to remove fact key₁ ≠ key₂ from formula key₁ = r₁∧ key₁ = r₂∧ key₁ ≠ key₂
+resulted in key₁ = r₁∧ key₁ = r₂
+
+
+
+key₂ = r₁∧ r₁ = r₂∨
+key₁ ≠ r₁∧ r₁ = r₂∨
+key₁ ≠ key₂
+
+
+
+key₁ ≠ key₂∧ key₁ = r₂∨
+r₁ = r₂∧ key₁ ≠ r₁∨
+key₁ ≠ key₂∨
+key₂ = r₁∧ r₁ = r₂∨
+key₁ = r₂∧ key₂ = r₁∧ key₁ ≠ key₂∨
+key₁ ≠ key₂∧ key₂ = r₂∨
+r₁ = r₂∧ key₁ ≠ key₂∨
+key₁ ≠ key₂∧ key₂ = r₁
+
+
+
+key₁ = key₂∧ r₁ = r₂∧ key₁ ≠ r₁∧ key₁ = key₁∨
+key₁ ≠ r₁∧ key₁ = r₂∧ key₁ ≠ key₂∨
+key₂ = r₁∧ key₁ = r₂∧ key₁ ≠ key₂∨
+key₂ = r₁∧ r₁ = r₂∨ key₁ ≠ r₂∧ key₁ = r₁∧ key₁ ≠ key₂ ∨
+key₂ = r₂∧ key₁ = r₁∧ key₁ ≠ key₂∨
+key₂ ≠ r₁∧ key₁ ≠ r₂∧ key₁ ≠ key₂∨
+key₂ ≠ r₁∧ key₂ = r₂∧ key₁ ≠ key₂∨
+key₂ ≠ r₂∧ key₂ = r₁∧ key₁ ≠ key₂∨
+r₁ = r₂∧ key₁ = r₁∧ key₁ ≠ key₂∨
+r₁ = r₂∧ key₁ ≠ key₂∨
+
+
+
+get/get:
+key₁ ≠ key₂∧ key₁ = r₁∧ key₁ ≠ r₂ ∨
+key₁ ≠ key₂∧ key₁ ≠ r₁∧ key₁ = r₂ ∨
+
+key₁ ≠ key₂∧ key₂ = r₁∧ key₂ ≠ r₂ ∨
+key₁ ≠ key₂∧ key₂ = r₂∧ key₂ ≠ r₁ ∨
+
+key₁ ≠ key₂∧ key₁ = r₁∧ key₂ = r₂ ∨
+key₁ ≠ key₂∧ key₁ = r₂∧ key₂ = r₁ ∨
+
+key₁ ≠ key₂∧ key₁ ≠ r₁∧ key₂ ≠ r₁ ∨
+key₁ ≠ key₂∧ key₁ ≠ r₂∧ key₂ ≠ r₁ ∨
+
+key₁ ≠ key₂∧ r₁ = r₂∨
+key₁ ≠ r₁  ∧ r₁ = r₂∨  // → r₁ = r₂
+key₂ = r₁  ∧ r₁ = r₂∨
+
+
+
+key₁ ≠ value₂∧ r₁ < key₁∧ key₂ ≠ r₂∧ key₂ < key₁∧ r₁ ≠ r₂∧ key₂ < value₂∧ r₁ < value₂∧ r₂ < key₁∧ r₂ < value₂∨
+key₁ ≠ value₂∧ r₁ < key₁∧ key₁ = r₂∧ key₂ < key₁∧ r₁ < value₂∧ key₂ < value₂∨
+
+key₂ = r₁∧ r₂ = value₂∧ key₁ ≠ key₂∧ key₁ ≠ r₂∧ key₂ ≠ r₂∨
+key₁ = r₂∧ key₂ ≠ r₁∧ r₁ = value₂∧ key₁ ≠ key₂∧ key₁ ≠ r₁∨
+r₁ ≠ r₂∧ key₁ < r₁∧ r₂ = value₂∧ key₁ ≠ key₂∧ key₂ < r₁∧ key₂ < r₂∧ key₁ ≠ r₂∨
+key₂ = r₁∧ r₁ = r₂∧ key₁ = value₂∧ key₁ ≠ key₂∨
+key₁ ≠ value₂∧ key₁ = r₂∧ key₁ < r₁∧ r₁ ≠ value₂∧ key₂ < value₂∧ key₂ < r₁∧ key₁ ≠ key₂∨
+key₁ = r₂∧ key₂ ≠ r₁∧ key₂ = value₂∧ key₁ ≠ key₂∧ key₁ ≠ r₁∨
+key₁ = value₂∧ key₁ ≠ r₁∧ r₁ = r₂∧ key₁ ≠ key₂∨
+
+r₂ ≠ value₂∧ key₁ < key₂∧ key₂ < r₂∧ key₂ < value₂∧ r₁ < key₂∧ key₁ ≠ r₁∨
+
+key₁ = value₂∧ key₁ ≠ key₂∧ key₁ ≠ r₁∧ r₂ < key₁∧ key₂ ≠ r₂∨
+r₁ ≠ r₂∧ value₂ < key₂∧ key₂ < r₁∧ key₂ < r₂∧ key₁ ≠ r₂∧ key₁ < r₁∧ key₁ ≠ key₂∨
+key₁ = key₂∧ key₂ = value₂∧ r₁ = value₂∧ r₁ = r₂∨
+key₂ = value₂∧ r₁ ≠ r₂∧ key₁ < r₁∧ key₁ ≠ key₂∧ key₂ < r₁∧ key₂ < r₂∧ key₁ ≠ r₂∨
+key₂ ≠ r₁∧ r₁ < key₁∧ key₁ = value₂∧ key₂ < key₁∧ r₁ < r₂∧ key₂ < r₂∧ key₁ ≠ r₂∨
+key₂ = value₂∧ key₂ ≠ r₁∧ r₁ < key₁∧ key₂ < key₁∧ r₁ < r₂∧ key₂ < r₂∨
+key₂ ≠ r₁∧ key₁ ≠ r₁∧ r₂ = value₂∧ key₁ < r₂∧ r₁ ≠ r₂∧ key₁ < key₂∧ key₂ ≠ r₂∨
+key₂ < r₂∧ r₁ < key₁∧ key₁ ≠ r₂∧ key₂ ≠ r₁∧ r₁ < r₂∧ r₁ < value₂∧ key₂ < value₂∧ key₁ ≠ key₂∨
+key₂ ≠ value₂∧ key₂ = r₂∧ key₁ ≠ key₂∧ key₂ ≠ r₁∧ key₁ ≠ r₁∨
+key₂ ≠ r₁∧ value₂ < key₂∧ r₁ = r₂∧ value₂ < r₁∧ key₁ ≠ value₂∧ key₁ < r₁∧ key₁ ≠ key₂∨
+key₂ < r₁∧ r₁ = r₂∧ value₂ < key₁∧ key₂ < value₂∧ r₁ < key₁∧ r₁ ≠ value₂∨
+key₂ ≠ r₁∧ key₂ = value₂∧ key₁ ≠ r₁∧ key₁ < r₂∧ r₁ ≠ r₂∧ key₁ < key₂∧ key₂ ≠ r₂∨
+key₂ = value₂∧ key₁ ≠ key₂∧ key₁ = r₁∧ key₁ ≠ r₂∧ key₂ ≠ r₂∨
+key₁ ≠ value₂∧ key₁ < r₁∧ r₁ = r₂∧ r₁ ≠ value₂∧ key₂ < value₂∧ key₂ < r₁∧ key₁ ≠ key₂∨
+key₂ = r₁∧ key₁ ≠ r₂∧ key₂ ≠ r₂∧ key₁ ≠ key₂∧ key₂ ≠ value₂∨
+key₁ ≠ value₂∧ r₁ ≠ r₂∧ key₂ ≠ r₂∧ r₁ ≠ value₂∧ key₁ ≠ r₂∧ key₂ < r₁∧ r₂ ≠ value₂∧ key₂ ≠ value₂∧ key₂ < key₁∧ key₁ ≠ r₁∨
+key₁ = r₂∧ key₂ = r₁∧ key₁ ≠ key₂∧ key₁ ≠ value₂∧ key₂ ≠ value₂∨
+key₂ ≠ r₁∧ r₁ = value₂∧ key₁ ≠ r₁∧ key₁ < r₂∧ key₂ ≠ r₂∧ key₁ < key₂∨
+key₁ = value₂∧ key₂ ≠ r₁∧ key₂ = r₂∧ key₁ ≠ key₂∧ key₁ ≠ r₁∨
+r₁ = value₂∧ r₁ = r₂∧ key₁ = key₂∧ key₁ ≠ r₁∨
+key₁ < key₂∧ value₂ < r₂∧ r₁ ≠ value₂∧ r₁ < r₂∧ r₂ < key₂∧ value₂ < key₁∧ r₁ < key₁∧ key₁ ≠ r₂∨
+key₁ < key₂∧ r₁ ≠ value₂∧ key₁ = r₂∧ key₂ ≠ value₂∧ key₁ ≠ value₂∧ r₁ < key₂∧ key₁ ≠ r₁∨
+r₁ < key₁∧ key₁ < r₂∧ r₂ ≠ value₂∧ key₁ < value₂∧ r₂ < key₂∧ key₂ ≠ value₂∧ r₁ < key₂∧ key₁ ≠ key₂∨
+key₂ ≠ r₁∧ key₂ = r₂∧ r₁ = value₂∧ key₁ ≠ key₂∧ key₁ ≠ r₁∨
+key₂ < r₁∧ key₁ = r₂∧ value₂ < key₁∧ key₂ < value₂∧ r₁ < key₁∧ r₁ ≠ value₂∨
+key₁ ≠ value₂∧ key₂ < key₁∧ key₂ ≠ r₂∧ r₁ ≠ value₂∧ key₂ < value₂∧ r₂ < key₁∧ r₂ < value₂∧ key₂ < r₁∧ r₂ < r₁∨
+r₁ ≠ value₂∧ key₂ < r₁∧ value₂ < key₁∧ key₂ < value₂∧ r₁ < key₁∧ r₂ < r₁∧ r₂ < value₂∨
+key₁ = value₂∧ r₁ = value₂∧ r₁ = r₂∧ r₁ < key₂∨
+key₂ ≠ r₁∧ key₂ < key₁∧ r₂ < key₂∧ r₁ ≠ value₂∧ r₂ ≠ value₂∧ value₂ < key₂∧ r₁ < key₁∨
+key₂ = r₁∧ key₁ ≠ key₂∧ key₁ = value₂∧ key₁ ≠ r₂∧ key₂ ≠ r₂∨
+key₂ = value₂∧ r₁ = value₂∧ r₁ = r₂∧ r₁ < key₁∨
+key₂ ≠ r₁∧ r₁ = r₂∧ r₁ = value₂∧ key₁ ≠ r₁∨
+key₂ ≠ r₁∧ r₁ = r₂∧ r₁ < key₁∧ key₂ < key₁∧ r₁ < value₂∧ key₂ < value₂∨
+key₂ = r₁∧ r₂ = value₂∧ key₁ = value₂∧ key₁ ≠ key₂∨
+r₂ < key₁∧ r₂ = value₂∧ key₁ ≠ key₂∧ r₁ ≠ r₂∧ key₂ ≠ r₂∨
+key₁ = r₂∧ key₂ ≠ r₁∧ value₂ < key₂∧ value₂ < r₁∧ key₁ ≠ value₂∧ key₁ < r₁∧ key₁ ≠ key₂∨
+r₁ = r₂∧ key₁ ≠ key₂∧ key₂ = r₁∧ key₂ ≠ value₂∨
+key₂ < r₂∧ r₁ ≠ value₂∧ key₁ < key₂∧ key₁ ≠ value₂∧ value₂ < key₂∧ r₁ < key₂∧ key₁ ≠ r₁∨
+key₂ = value₂∧ r₁ = value₂∧ key₁ = r₂∧ key₁ ≠ key₂∨
+key₂ ≠ r₁∧ r₂ < key₂∧ key₂ = value₂∧ r₂ < key₁∧ key₁ ≠ key₂∨
+key₁ ≠ value₂∧ r₂ < key₁∧ r₁ ≠ r₂∧ r₁ < key₁∧ key₁ < key₂∧ r₂ < value₂∧ r₁ < value₂∧ r₂ < key₂∧ r₁ < key₂∧ key₂ ≠ value₂∨
+r₁ ≠ r₂∧ key₁ = value₂∧ key₁ < r₁∧ key₁ ≠ key₂∧ key₂ < r₁∧ key₂ < r₂∧ key₁ ≠ r₂∨
+key₂ ≠ value₂∧ r₁ = r₂∧ key₂ ≠ r₁∧ key₁ < value₂∧ key₁ ≠ r₁∧ key₁ < key₂∨
+key₁ < key₂∧ key₂ = value₂∧ r₁ = value₂∧ r₁ = r₂∨
+key₁ = r₁∧ key₂ = r₂∧ key₁ ≠ key₂∧ key₁ ≠ value₂∧ key₂ ≠ value₂∨
+key₂ = value₂∧ key₂ < r₁∧ r₂ < key₁∧ key₂ < r₂∧ r₁ < key₁∧ r₁ ≠ r₂∨
+key₂ ≠ r₁∧ value₂ < key₂∧ key₂ < key₁∧ r₁ < r₂∧ r₁ < key₁∧ key₂ < r₂∨
+r₁ ≠ r₂∧ key₁ < r₁∧ r₁ = value₂∧ key₁ ≠ key₂∧ key₂ < r₁∧ key₂ < r₂∧ key₁ ≠ r₂∨
+r₂ < key₁∧ key₁ < r₁∧ key₂ ≠ r₁∧ key₁ < value₂∧ r₁ ≠ value₂∧ key₁ < key₂∧ key₂ ≠ value₂∨
+key₂ = value₂∧ r₁ = value₂∧ key₁ ≠ key₂∧ key₂ ≠ r₂∨
+key₁ = value₂∧ r₂ = value₂∧ key₁ ≠ r₁∧ key₁ ≠ key₂∨
+key₂ ≠ r₁∧ key₂ = value₂∧ r₁ = r₂∧ key₁ ≠ key₂∨
+r₂ ≠ value₂∧ key₂ ≠ r₁∧ key₁ ≠ value₂∧ key₁ ≠ key₂∧ key₁ < r₁∧ value₂ < key₂∧ value₂ < r₁∧ r₂ < key₂∧ r₂ < r₁∨
+r₂ = value₂∧ key₁ = r₁∧ key₁ ≠ key₂∧ key₁ ≠ r₂∧ key₂ ≠ r₂∨
+r₂ = value₂∧ r₁ < key₁∧ key₂ ≠ r₁∧ key₂ < key₁∧ r₁ < r₂∧ key₂ < r₂∧ key₁ ≠ r₂∨
+r₁ = r₂∧ key₁ < key₂∧ r₁ ≠ value₂∧ key₂ ≠ value₂∧ key₁ ≠ value₂∧ r₁ < key₂∧ key₁ ≠ r₁∨
+key₁ < key₂∧ key₂ < value₂∧ r₁ ≠ r₂∧ r₁ ≠ value₂∧ key₂ < r₁∧ r₂ ≠ value₂∧ key₁ < r₂∧ key₂ ≠ r₂∨
+key₁ = r₁∧ r₁ = r₂∧ key₁ ≠ key₂∧ key₁ ≠ value₂∨
+r₁ = value₂∧ key₂ ≠ r₁∧ r₂ < key₂∧ key₁ ≠ r₁∧ key₁ ≠ key₂∧ r₂ < key₁∨
+value₂ < key₁∧ key₁ < r₁∧ r₂ < key₂∧ key₁ < r₂∧ r₁ ≠ r₂∧ key₁ < key₂∧ key₂ ≠ r₁∨
+r₁ ≠ r₂∧ key₁ < key₂∧ r₂ < key₁∧ r₁ ≠ value₂∧ r₁ < key₁∧ r₂ ≠ value₂∧ value₂ < key₂∧ key₁ ≠ value₂∨
+key₂ ≠ r₁∧ r₁ = value₂∧ r₁ < key₁∧ key₂ < key₁∧ r₁ < r₂∧ key₂ < r₂∨
+key₂ = value₂∧ r₁ = r₂∧ key₁ = r₁∧ key₁ ≠ key₂∨
+key₁ = value₂∧ key₂ ≠ r₁∧ key₁ ≠ r₁∧ key₁ < r₂∧ r₁ ≠ r₂∧ key₁ < key₂∧ key₂ ≠ r₂∨
+key₂ < key₁∧ key₁ = value₂∧ r₁ = value₂∧ r₁ = r₂∨
+key₂ < r₁∧ r₁ = value₂∧ r₂ < key₁∧ key₂ < r₂∧ r₁ < key₁∧ r₁ ≠ r₂∨
+r₁ = r₂∧ key₂ < key₁∧ value₂ < key₂∧ key₂ ≠ r₁∧ r₁ < key₁∨
+key₁ < value₂∧ r₁ ≠ r₂∧ r₂ < key₂∧ r₁ ≠ value₂∧ r₁ < key₂∧ key₁ < r₁∧ value₂ < key₂∧ key₁ < r₂∧ r₂ ≠ value₂∨
+key₁ ≠ r₂∧ key₁ = r₁∧ key₁ ≠ key₂∧ key₂ ≠ value₂∧ key₁ ≠ value₂∨
+key₂ ≠ r₁∧ key₂ = value₂∧ r₂ = value₂∧ key₁ ≠ key₂∨
+key₁ = r₂∧ key₂ ≠ value₂∧ key₂ ≠ r₁∧ key₁ < value₂∧ r₁ ≠ value₂∧ key₁ < key₂∧ key₁ ≠ r₁∨
+key₁ = r₂∧ value₂ < key₂∧ key₂ < key₁∧ key₂ ≠ r₁∧ r₁ < key₁∨
+key₁ < r₁∧ r₁ ≠ r₂∧ r₂ < key₂∧ key₁ < r₂∧ r₁ < key₂∧ r₂ < value₂∧ r₁ < value₂∧ key₂ ≠ value₂∨
+key₂ = value₂∧ r₂ = value₂∧ key₁ = r₁∧ key₁ ≠ key₂∨
+key₂ = r₂∧ r₁ = value₂∧ key₁ = value₂∧ key₁ ≠ key₂∨
+key₁ ≠ key₂∧ key₁ = value₂∧ r₁ = value₂∧ key₁ ≠ r₂ ∨
+
+
+
+
+r₂ < r₁∧ key₂ < value₂∧ key₁ ≠ r₁∧ r₂ < key₁∧ r₁ < key₂∧ key₁ < value₂∧ r₂ < key₂∧ key₁ ≠ key₂∧ r₂ < value₂∧ r₁ < value₂
+r₂ < r₁∧ key₂ < value₂∧ key₁ ≠ r₁∧ r₂ < key₁∧ r₁ < key₂∧ key₁ < value₂∧ r₂ < key₂∧ key₁ ≠ key₂∧ r₂ < value₂∧ r₁ < value₂
+
+
+
+
+
+key₁ < r₁∧ key₂ < r₂∧ r₂ < r₁∧ r₁ = value₂∧ key₁ < r₂∧ key₂ < r₁∧ key₁ ≠ key₂∨
+key₁ < r₂∧ key₂ < r₁∧ r₁ < r₂∧ r₂ = value₂∧ key₁ < r₁∧ key₂ < r₂∧ key₁ ≠ key₂
+
+key₁ < r₁∧ key₂ < r₂∧ r₂ = value₂∧ key₁ ≠ key₂∧ key₁ < r₂∧ key₂ < r₁∧ r₁ ≠ r₂∨
+key₁ < r₂∧ key₂ < r₁∧ r₁ = value₂∧ key₁ ≠ key₂∧ key₁ < r₁∧ key₂ < r₂∧ r₁ ≠ r₂
+
+swapping r₂ < r₁
+
+
+
+
+r₂ < r₁∧ r₂ < key₂∧ key₁ < r₁∧ r₁ < key₂∧ key₁ < r₂∧ key₁ < key₂
+r₂ < key₂∧ key₁ < r₂∧ r₁ < key₂∧ r₁ ≠ r₂∧ key₁ < r₁∧ key₁ < key₂
+
+
+get/get:
+
+key₁ = r₁∧ key₁ ≠ key₂∧ key₁ ≠ r₂∨
+key₂ = r₂∧ key₁ ≠ key₂∧ key₁ = r₁∨
+key₁ < r₁∧ r₁ = r₂∨
+key₁ ≠ r₁∧ key₂ ≠ r₁∧ key₁ ≠ key₂∨
+key₂ = r₁∧ key₁ = r₂∧ key₁ ≠ key₂∨
+key₁ = r₁∧ key₁ ≠ key₂∧ key₁ < r₂∨
+r₁ = r₂∧ key₁ ≠ key₂∨
+key₂ = r₂∧ key₁ ≠ key₂∧ key₂ ≠ r₁∨
+key₂ ≠ r₂∧ key₁ ≠ r₂∧ r₁ < key₁∧ key₁ ≠ key₂∨
+r₁ = r₂∧ r₁ < key₁∨
+key₁ ≠ r₁∧ key₂ ≠ r₁∧ r₂ < key₁∧ key₁ ≠ key₂∨
+key₂ ≠ r₁∧ key₁ ≠ key₂∧ key₁ ≠ r₂∨
+key₂ = r₁∧ r₁ = r₂∨
+key₂ ≠ r₂∧ key₁ ≠ key₂∧ key₂ < r₁∧ key₁ ≠ r₂∨
+key₁ < r₂∧ key₂ ≠ r₁∧ key₁ ≠ key₂∨
+key₂ = r₁∧ key₂ ≠ r₂∧ key₁ ≠ key₂∨
+key₂ = r₁∧ r₂ < key₂∧ key₁ ≠ key₂∨
+key₂ ≠ r₂∧ key₁ ≠ key₂∧ key₁ ≠ r₂∨
+r₂ < key₂∧ key₁ ≠ r₁∧ key₁ ≠ key₂∨
+r₂ < key₁∧ key₂ ≠ r₁∧ r₂ < r₁∧ key₁ ≠ key₂∧ key₁ ≠ r₂∨
+key₂ < r₂∧ key₂ = r₁∧ key₁ ≠ key₂
+
+
+
+
+key₁ < value₂ ∧ value₂ < r₁ ∧ r₁ < key₂ ∧ r₁ = r₂∨
+value₂ < key₁ ∧ key₁ < r₁ ∧ r₁ < key₂∧ r₁ = r₂
+
+≡⟩
+
+key₁ ≠ value₂∧ r₁ < key₂∧ r₁ = r₂∧ value₂ < r₁∨
+r₁ = r₂∧ key₁ ≠ value₂∧ r₁ < key₂∧ key₁ < r₁
+
+swapping key₁ < value₂
+
+length: 468
+failed on [][r₁, key₂, key₁, r₂, value₂]OrderedPartition([[4], [0, 3], [1, 2]])
+
+
+
+
+r₁ < value₂∧ value₂ < key₁ ∧ key₂ < r₁     ∧ r₂ < key₂
+value₂ < r₁∧     r₁ < key₁ ∧ key₂ < value₂ ∧ r₂ < key₂
+
+≡⟩
+
+r₁ ≠ value₂∧ value₂ < key₁ ∧ key₂ < r₁    ∧ r₂ < key₂ ∨
+r₁ ≠ value₂∧     r₁ < key₁ ∧ key₂ < value₂∧ r₂ < key₂
+
+swapping r₁ < value₂
+
+
+r₂ = value₂∧ key₂ < key₁∧ key₁ < r₁ ∧ r₁ < r₂ ∨ -- false
+r₂ = value₂∧ key₂ < r₁∧ r₁ < key₁∧ key₁ < r₂   -- false
+
+r₂ = value₂∧ key₁ ≠ r₁∧ r₁ < r₂∧ key₂ < key₁∨  -- false
+r₂ = value₂∧ key₁ ≠ r₁∧ key₂ < r₁∧ key₁ < r₂   -- true!
+
+
+swapping key₁ < r₁
+failed on [][r₂, key₁, value₂, r₁, key₂]OrderedPartition([[1, 4], [3], [0, 2]])
+key₁ = key₂ < r₁ < r₂ = value₂
+
+
+
+has/add:
+r₁∧ ¬ r₂∧ e₁ ≠ e₂∨
+¬ r₂∧ ¬ r₁∧ e₁ ≠ e₂∨
+r₂∧ r₁∧ e₁ ≠ e₂∨
+r₂∧ ¬ r₁∧ e₁ ≠ e₂
+
+¬ r₂∧ r₁∧ e₁ = e₂∨
+
+
+get/put:
+key₁ = value₂∧ r₁ = value₂∧ key₁ ≠ key₁∨
+key₁ ≠ r₁∧ key₂ = value₂∨
+key₁ ≠ key₁∨
+key₂ = value₂∧ r₁ = value₂∧ r₁ = r₂∧ key₁ ≠ key₁∨
+key₁ ≠ r₂∧ key₁ ≠ key₁∨
+key₁ ≠ key₂∨
+key₁ = value₂∧ key₁ ≠ key₁∨
+key₂ = value₂∧ r₂ = value₂∧ key₁ ≠ key₁∨
+key₂ = r₂∨
+key₁ ≠ key₁∧ key₁ ≠ r₁∨
+r₁ = r₂∨
+key₂ = value₂∧ key₁ ≠ r₁∧ key₁ ≠ key₁∨
+r₁ = value₂∧ key₂ = value₂∧ r₁ = r₂∨
+r₁ = value₂∧ key₁ ≠ key₁∨
+key₁ = value₂∧ key₂ = r₂∧ key₁ ≠ key₁∨
+key₂ = r₂∧ key₁ ≠ key₁∨
+key₂ = r₂∧ key₁ ≠ r₁∨
+key₂ = r₁∧ key₁ ≠ key₁∨
+r₁ = value₂∧ key₂ = value₂∧ key₁ ≠ key₁∨
+key₂ = r₁∧ key₁ ≠ r₂∨
+r₁ = value₂∧ r₁ = r₂∨
+r₁ = value₂∧ key₁ ≠ r₂∨
+key₂ = value₂∧ r₁ = value₂∨
+r₁ = value₂∧ r₁ = r₂∧ key₁ ≠ key₁∨
+key₁ ≠ r₁∨
+r₁ = value₂∧ key₁ ≠ r₂∧ key₁ ≠ key₁∨
+key₁ ≠ key₁∧ r₂ = value₂∨
+key₁ = value₂∧ key₁ ≠ r₁∧ key₁ ≠ key₁∨
+true∨
+key₁ ≠ r₂∨
+key₁ ≠ key₁∧ key₂ = value₂∨
+key₁ ≠ key₁∧ r₁ = r₂
+
+
+get/put:
+key₂ ≠ r₂∧ key₁ ≠ value₂∧ key₂ ≠ value₂∨
+r₁ ≠ value₂∧ key₁ ≠ value₂∧ key₂ ≠ r₂∧ r₁ ≠ r₂∨
+key₁ ≠ value₂∧ key₂ ≠ value₂∨
+key₂ ≠ r₂∧ key₁ ≠ r₂∨
+r₁ ≠ value₂∧ key₂ ≠ value₂∧ key₁ ≠ r₁∨
+r₁ ≠ r₂∧ key₁ ≠ value₂∧ key₁ ≠ key₂∧ r₂ ≠ value₂∨
+key₂ ≠ r₂∧ r₁ ≠ value₂∧ key₁ ≠ r₂∨
+key₂ ≠ r₂∧ key₁ ≠ r₂∧ key₁ ≠ r₁∨
+key₂ ≠ r₂∧ key₁ ≠ r₁∧ key₂ ≠ r₁∨
+key₂ ≠ value₂∧ key₁ ≠ key₂∨
+key₂ ≠ value₂∧ r₂ ≠ value₂∧ key₁ ≠ r₂∨
+r₁ ≠ r₂∧ key₂ ≠ r₂∧ key₁ ≠ r₁∨
+r₁ ≠ value₂∧ key₂ ≠ r₂∧ key₁ ≠ key₂∨
+key₂ ≠ r₁∧ key₁ ≠ r₂∧ r₁ ≠ value₂∧ r₂ ≠ value₂∨
+key₁ ≠ r₁∧ key₂ ≠ r₁∨
+r₁ ≠ r₂∧ key₁ ≠ key₂∧ key₁ ≠ r₂∨
+r₁ ≠ value₂∧ key₁ ≠ r₂∧ key₁ ≠ value₂∧ key₂ ≠ r₂∨
+key₁ ≠ r₁∧ key₂ ≠ r₁∧ key₁ ≠ r₂∨
+key₁ ≠ key₂∧ key₁ ≠ r₁∨
+r₁ ≠ value₂∧ key₂ ≠ value₂∧ key₁ ≠ key₂∨
+key₁ ≠ key₂∧ key₁ ≠ r₂∨
+r₁ ≠ r₂∧ key₂ ≠ r₂∧ key₁ ≠ value₂∧ key₂ ≠ value₂∨
+key₂ ≠ r₂∧ key₁ ≠ key₂∨
+r₁ ≠ value₂∧ key₁ ≠ value₂∧ key₂ ≠ r₁∨
+key₁ ≠ value₂∧ r₁ ≠ value₂∧ key₁ ≠ key₂∨
+key₂ ≠ r₂∧ key₁ ≠ value₂∧ r₂ ≠ value₂∨
+key₁ ≠ key₂∧ r₁ ≠ value₂∧ key₁ ≠ r₂∨
+key₁ ≠ key₂∧ r₁ ≠ r₂∧ r₂ ≠ value₂∧ key₂ ≠ value₂∨
+key₁ ≠ value₂∧ key₁ ≠ key₂∨
+key₂ ≠ r₂∧ key₁ ≠ key₂∧ r₁ ≠ r₂∨
+key₂ ≠ r₂∧ r₁ ≠ value₂∧ key₁ ≠ r₁∧ r₂ ≠ value₂∨
+r₁ ≠ r₂∧ key₁ ≠ r₁∧ key₂ ≠ value₂∧ r₂ ≠ value₂∨
+r₁ ≠ r₂∧ r₁ ≠ value₂∧ key₂ ≠ value₂∧ key₁ ≠ r₂∨
+key₁ ≠ key₂∧ key₂ ≠ value₂∧ r₂ ≠ value₂∨
+key₂ ≠ r₁∧ key₁ ≠ r₂∧ r₁ ≠ r₂∨
+key₁ ≠ key₂∧ key₂ ≠ r₁∨
+r₁ ≠ r₂∧ key₁ ≠ key₂∧ key₁ ≠ r₁∨
+key₂ ≠ r₂∧ key₁ ≠ value₂∧ key₁ ≠ r₂∨
+key₂ ≠ r₁∧ key₁ ≠ value₂∧ r₁ ≠ r₂∧ r₂ ≠ value₂∨
+key₁ ≠ value₂∧ key₂ ≠ value₂∧ r₁ ≠ r₂∨
+key₁ ≠ value₂∧ key₁ ≠ key₂∧ r₂ ≠ value₂∨
+r₁ ≠ r₂∧ key₁ ≠ key₂∧ key₂ ≠ r₁
+
+
+
+¬ key₂ = key₁∨
+¬ key₂ = r₁∧ ¬ key₁ = r₁∨
+¬ key₂ = r₂∧ ¬ key₁ = r₂∨
+¬ r₁ = r₂∧ ¬ key₂ = r₂∧ ¬ key₁ = r₁∨
+¬ key₂ = r₁∧ ¬ key₁ = r₁∧ r₁ = r₂∨
+¬ key₂ = r₁∧ ¬ r₁ = r₂∧ ¬ key₁ = r₂
+
+
+
+¬ key₁ = r₁∧ r₁ < r₂∨
+¬ key₁ = r₁∧ key₁ < r₂ ∨
+
+¬ key₁ = r₁∧ r₁ = r₂  ∨
+  key₁ = r₂∧ ¬ key₁ = r₁∨
+
+key₁ < r₂∧ r₂ < r₁∨
+key₁ = r₁∧ r₁ < r₂∨
+key₁ = r₁∧ r₁ = r₂∨
+key₁ = r₁∧ r₂ < key₁∨
+r₁ < r₂∧ r₂ < key₁∨
+r₁ = r₂∧ r₂ < key₁
+
+
+¬ key₁ = r₁∧ r₁ < r₂∨
+¬ key₁ = r₂∨
+  r₁ < key₁∨
+r₁ = r₂
+
+
+¬ key₁ = r₂ ∨
+¬ key₁ = r₁ ∨
+  r₁ = r₂
+
+
+
+
+
+key₁ < r₁∧ r₁ < r₂∨
+key₁ < r₂∨
+key₁ < r₂∧ r₁ < key₁∨
+key₁ = r₁∧ ¬ key₁ = r₂∨
+key₁ = r₂∧ r₁ < key₁∨
+r₁ = r₂
+
+unclosed:
+  r₁ < key₁ ∧   key₁ < r₂ ∨
+  r₁ < r₂   ∧   r₂ < key₁ ∨
+  key₁ < r₁ ∧   r₁ < r₂   ∨
+  r₂ < key₁ ∧   key₁ < r₁ ∨
+  r₂ < r₁   ∧   r₁ < key₁ ∨
+  key₁ < r₂ ∧   r₂ < r₁   ∨
+
+  key₁ = r₁ ∧ ¬ key₁ = r₂ ∨
+¬ key₁ = r₁ ∧   key₁ = r₂ ∨
+  r₁ = r₂
+
+
+
+key₁ < r₁∧ key₁ < r₂∨
+key₁ < r₁∧ r₂ < key₁∧ r₂ < r₁∨
+key₁ < r₂∧ r₁ < key₁∧ r₁ < r₂∨
+key₁ = r₁∧ ¬ key₁ = r₂∨
+key₁ = r₂∧ r₁ < key₁∨
+r₁ < key₁∧ r₂ < key₁∨
+r₁ = r₂
+
+==>
+key₁ < r₁∧   key₁ < r₂∨
+
+r₂ < key₁ ∧ key₁ < r₁∧ r₂ < r₁∨
+
+r₁ < key₁ ∧ key₁ < r₂∧ r₁ < r₂∨
+r₁ < key₁ ∧ r₂ < key₁∨
+
+key₁ = r₁∧ ¬ key₁ = r₂∨
+key₁ = r₂∧ r₁ < key₁∨
+r₁ = r₂
+
+
+key₁ < r₂  ∧   key₁ < r₁∧ r₂ < r₁∨
+key₁ < r₂  ∧ ¬ key₁ = r₁∧ r₁ < r₂∨
+r₁ < key₁∧ r₁ < r₂∧ r₂ < key₁∨
+¬ key₁ = r₁∧   key₁ = r₂∨
+¬ key₁ = r₁∧   r₂ < key₁∧ r₂ < r₁∨
+key₁ = r₁∧ ¬ key₁ = r₂∨
+r₁ = r₂
+
+
+
+
+normalized:
+key₁ < r₁∧ r₁ < r₂∨
+key₁ < r₁∧ r₁ = r₂∨
+key₁ < r₁∧ r₂ < key₁∨
+key₁ < r₂∧ r₁ < key₁∨
+key₁ < r₂∧ r₂ < r₁∨
+key₁ = r₁∧ r₁ < r₂∨
+key₁ = r₁∧ r₂ < key₁∨
+key₁ = r₂∧ r₁ < key₁∨
+key₁ = r₂∧ r₂ < r₁∨
+r₁ < key₁∧ r₂ < r₁∨
+r₁ < r₂∧ r₂ < key₁∨
+r₁ = r₂∧ r₂ < key₁
+
+"factored":
+key₁ < r₁∧ key₁ < r₂∧ r₂ < r₁∨
+key₁ < r₁∧ r₁ = r₂∨
+key₁ < r₂∧ r₁ < r₂∨
+key₁ = r₁∧ r₁ < r₂∨
+key₁ = r₁∧ r₂ < key₁∨
+key₁ = r₂∧ r₁ < key₁∨
+key₁ = r₂∧ r₂ < r₁∨
+r₁ < key₁∧ r₁ < r₂∧ r₂ < key₁∨
+r₁ = r₂∧ r₂ < key₁∨
+r₂ < key₁∧ r₂ < r₁
+
+
+key₁ < r₁∧ key₁ < r₂∨
+key₁ < r₁∧ r₁ = r₂∨
+r₁ = r₂∧ r₂ < key₁ ∨
+
+key₁ < r₁∧ r₂ < key₁∧ r₂ < r₁∨
+key₁ < r₂∧ r₁ < key₁∧ r₁ < r₂∨
+key₁ = r₁∧ r₁ < r₂∨
+key₁ = r₁∧ r₁ = r₂∨
+key₁ = r₁∧ r₂ < key₁∨
+key₁ = r₂∧ r₁ < key₁∨
+key₁ = r₂∧ r₂ < r₁∨
+r₁ < key₁∧ r₂ < key₁∨
+
+
+key₁ < r₁∧ key₁ < r₂∨
+r₁ < key₁∧ r₂ < key₁∨
+
+
+key₁ < r₂∧ key₁ = r₁∧ r₁ < r₂∨
+key₁ = r₁∧ r₂ < key₁∧ r₂ < r₁∨
+
+key₁ < r₁∧ key₁ = r₂∧ r₂ < r₁∨
+
+key₁ < r₁∧ r₂ < key₁∧ r₂ < r₁∨
+key₁ < r₂∧ r₁ < key₁∧ r₁ < r₂∨
+key₁ = r₁∧ key₁ = r₂∧ r₁ = r₂∨
+key₁ = r₂∧ r₁ < key₁∧ r₁ < r₂∨
+
+
+
+key₁ < r₁∧ key₁ < r₂∧ r₁ < r₂∨
+key₁ < r₁∧ r₁ = r₂∨
+key₁ < r₁∧ r₂ < r₁∨ key₁ = r₁∧ r₁ < r₂∨ key₁ = r₁∧ r₁ = r₂∨ key₁ = r₁∧ r₂ < key₁∨ key₁ = r₂∧ r₁ < key₁∨ key₁ = r₂∧ r₂ < r₁∨ r₁ < key₁∧ r₁ < r₂∨ r₁ < key₁∧ r₂ < key₁∧ r₂ < r₁∨ r₁ = r₂∧ r₂ < key₁
+
+
+
+unsimplified:
+key₁ < r₁∧ key₁ < r₂∧ r₁ < r₂∨
+key₁ < r₁∧ key₁ < r₂∧ r₂ < r₁∨
+
+r₁ < key₁∧ r₁ < r₂∧ r₂ < key₁∨
+key₁ < r₂∧ r₁ < key₁∧ r₁ < r₂∨
+
+r₁ < key₁∧ r₂ < key₁∧ r₂ < r₁∨
+key₁ < r₁∧ r₂ < key₁∧ r₂ < r₁∨
+
+key₁ < r₁∧ r₁ = r₂∨
+key₁ = r₁∧ r₁ < r₂∨
+key₁ = r₁∧ r₁ = r₂∨
+key₁ = r₁∧ r₂ < key₁∨
+key₁ = r₂∧ r₁ < key₁∨
+key₁ = r₂∧ r₂ < r₁∨
+r₁ = r₂∧ r₂ < key₁
+---
+
+simplified manually:
+=>
+
+---
+
+
+
+key₁ < r₁∧ r₁ = r₂∨
+key₁ = r₁∧ r₁ < r₂∨
+key₁ = r₁∧ r₁ = r₂∨
+key₁ = r₁∧ r₂ < key₁∨
+key₁ = r₂∧ r₁ < key₁∨
+key₁ = r₂∧ r₂ < r₁∨
+r₁ = r₂∧ r₂ < key₁
+
+
+
+key₁ < r₁∧ r₁ < r₂∨
+key₁ < r₁∧ r₁ = r₂∨
+key₁ < r₁∧ r₂ < r₁∨
+key₁ = r₁∧ r₁ < r₂∨
+key₁ = r₁∧ r₁ = r₂∨
+key₁ = r₁∧ r₂ < key₁∨
+key₁ = r₂∧ r₁ < key₁∨
+key₁ = r₂∧ r₂ < r₁∨
+r₁ < key₁∧ r₁ < r₂∨
+r₁ < key₁∧ r₂ < r₁∨
+r₁ = r₂∧ r₂ < key₁
+
+
+
+e₁ < e₂∧ ¬ r₁∧ r₂∨
+e₂ < e₁∧ ¬ r₁∧ r₂∨
+
+e₁ < e₂∧ r₁∧ r₂∨
+e₂ < e₁∧ r₁∧ r₂
+
+e₁ = e₂∧ r₁∧ r₂∨
+
+
+  e₁ = e₂∧   r₁∧ r₂∨
+
+¬ e₁ = e₂∧   r₁∧ r₂∨
+¬ e₁ = e₂∧ ¬ r₁∧ r₂
+
+
+
+
+  e₁ = e₂∧ ¬ r₁∧ ¬ r₂∨ 
+¬ e₁ = e₂∧   r₁∧ ¬ r₂∨
+¬ e₁ = e₂∧ ¬ r₁∧ ¬ r₂
+
+  e₁ = e₂∧   r₁ ∧   r₂∨
+  e₁ = e₂∧ ¬ r₁ ∧ ¬ r₂
+
+¬ e₁ = e₂∧   r₁ ∧ ¬ r₂∨
+¬ e₁ = e₂∧ ¬ r₁ ∧   r₂∨
+¬ e₁ = e₂∧ ¬ r₁ ∧ ¬ r₂∨
+¬ e₁ = e₂∧   r₁ ∧   r₂∨
+
+
+
+simplified:
+¬ r₁∧ ¬ e₁ = e₂∨
+r₂∧ r₁∨
+¬ r₁∧ e₁ = e₂∧ ¬ r₂∨
+¬ r₂∧ ¬ e₁ = e₂∧ r₁
+---
+
+unsimplified
+  r₁∧   r₂∧   e₁ = e₂∨
+¬ r₁∧ ¬ r₂∧   e₁ = e₂∨
+
+¬ r₁∧   r₂∧ ¬ e₁ = e₂∨
+¬ r₁∧ ¬ r₂∧ ¬ e₁ = e₂∨
+
+  r₁∧   r₂∧ ¬ e₁ = e₂∨
+  r₁∧ ¬ r₂∧ ¬ e₁ = e₂
+---
+
+¬ e₁ = e₂∧ ¬ r₁∨
+¬ e₁ = e₂∧ ¬ r₂∨
+  e₁ = e₂∧ ¬ r₂∧ ¬ r₁∨
+r₁∧ r₂
+
+
+¬ r₂∧ e₁ = e₂∧ ¬ r₁∨
+r₂∧ e₁ = e₂∧ r₁∨
+
+r₂∧ e₂ < e₁∧ r₁∨
+r₂∧ e₁ < e₂∧ r₁
+
+¬ r₁∧ e₂ < e₁∧ ¬ r₂∨
+¬ r₂∧ e₁ < e₂∧ ¬ r₁∨
+
+¬ r₂∧ e₁ < e₂∧ r₁∨
+e₂ < e₁∧ r₁∧ ¬ r₂∨
+
+¬ r₁∧ r₂∧ e₂ < e₁∨
+¬ r₁∧ r₂∧ e₁ < e₂∨
+
+¬ r₁∧ ¬ e₁ = e₂∧ r₂∨ e₁ < e₂∧ ¬ r₂∧ r₁∨ ¬ r₁∧ e₂ < e₁∧ ¬ r₂∨ ¬ r₁∧ ¬ r₂∧ e₁ < e₂∨ r₁∧ ¬ e₁ = e₂∧ r₂∨ ¬ r₁∧ ¬ r₂∧ e₁ = e₂∨ e₂ < e₁∧ r₁∧ ¬ r₂∨ r₂∧ e₁ = e₂∧ r₁
+
+
+
+unsimplified:
+  r₁∧   r₂∧ e₁ < e₂∨
+  r₁∧ ¬ r₂∧ e₁ < e₂∨
+¬ r₁∧   r₂∧ e₁ < e₂∨
+¬ r₁∧ ¬ r₂∧ e₁ < e₂∨
+
+  r₁∧   r₂∧ e₂ < e₁∨
+  r₁∧ ¬ r₂∧ e₂ < e₁∨
+¬ r₁∧   r₂∧ e₂ < e₁∨
+¬ r₁∧ ¬ r₂∧ e₂ < e₁∨
+
+¬ r₁∧ ¬ r₂∧ e₁ = e₂∨
+  r₁∧   r₂∧ e₁ = e₂∨
+
+
+simplified:
+¬ r₁∧ ¬ r₂∧   e₁ = e₂∨
+
+  r₁∧       ¬ e₁ = e₂∨
+¬ r₁∧         e₂ < e₁∨
+              e₁ < e₂∨
+  r₁∧   r₂
+
+simplified':
+  r₁∧        ¬ e₁ = e₂∨
+        r₂ ∧ ¬ e₁ = e₂∨
+  r₁∧   r₂ ∧   e₁ = e₂∨
+               e₁ < e₂∨
+¬ r₁∧ ¬ r₂            ∨
+
+
+unsimplified:
+r₁∧ r₂∧ e₁ = e₂∨
+r₁∧ r₂∧ e₁ < e₂∨
+r₁∧ r₂∧ e₂ < e₁
+
+simplified:
+¬ e₁ = e₂∧ r₂∧ r₁
+
+
+unsimplified:
+¬ r₁∧ ¬ r₂∧ e₂ < e₁∨
+  r₁∧ ¬ r₂∧ e₂ < e₁∨
+¬ r₁∧   r₂∧ e₂ < e₁∨
+  r₁∧   r₂∧ e₂ < e₁∨
+
+¬ r₁∧ ¬ r₂∧ e₁ < e₂∨
+  r₁∧ ¬ r₂∧ e₁ < e₂∨
+¬ r₁∧   r₂∧ e₁ < e₂∨
+  r₁∧   r₂∧ e₁ < e₂∨
+
+¬ r₁∧ ¬ r₂∧ e₁ = e₂∨
+  r₁∧   r₂∧ e₁ = e₂∨
+
+simplified:
+  r₁ ∧ r₂∧  ¬ e₁ = e₂∨
+¬ r₁ ∧        e₁ < e₂∨
+¬ r₂ ∧        e₁ < e₂∧
+¬ r₁∧ ¬ r₂∧ ¬ e₁ = e₂∨
+              e₂ < e₁
+
+
+r₂∧ r₁∧ e₁ = e₂∨
+¬ e₁ = e₂∧ r₁∧ ¬ r₂∨
+¬ e₁ = e₂∧ r₂∧ r₁∨
+¬ e₁ = e₂∧ ¬ r₁∧ ¬ r₂∨
+¬ e₁ = e₂∧ ¬ r₁∧ r₂
+
+
+
+
+// -----------------------
+
+¬ r₂∧ ¬ e₁ = e₂∧ r₁∧ e₁ < e₂∧ true∧ ¬ e₂ < e₁∨ false∨ e₁ = e₂∧ r₂∧ r₁∧ true∧ ¬ e₂ < e₁∧ ¬ e₁ < e₂∨ ¬ r₂∧ r₁∧ ¬ e₁ = e₂∧ e₂ < e₁∧ ¬ e₁ < e₂∧ true∨ e₁ < e₂∧ true∧ ¬ e₂ < e₁∧ r₂∧ r₁∧ ¬ e₁ = e₂∨ ¬ r₁∧ ¬ r₂∧ e₁ < e₂∧ ¬ e₂ < e₁∧ ¬ e₁ = e₂∧ true∨ e₁ < e₂∧ true∧ ¬ r₁∧ ¬ e₂ < e₁∧ r₂∧ ¬ e₁ = e₂∨ true∧ ¬ r₁∧ r₂∧ ¬ e₁ < e₂∧ ¬ e₁ = e₂∧ e₂ < e₁∨ ¬ r₂∧ ¬ e₁ = e₂∧ ¬ r₁∧ e₂ < e₁∧ ¬ e₁ < e₂∧ true∨ ¬ e₁ < e₂∧ e₂ < e₁∧ true∧ r₂∧ ¬ e₁ = e₂∧ r₁
+
+  e₁ = e₂ ∧   r₁ ∧   r₂ ∧ ¬ e₂ < e₁ ∧ ¬ e₁ < e₂ ∨
+
+¬ e₁ = e₂ ∧   r₁ ∧   r₂ ∧   e₁ < e₂ ∧ ¬ e₂ < e₁ ∨
+¬ e₁ = e₂ ∧   r₁ ∧   r₂ ∧ ¬ e₁ < e₂ ∧   e₂ < e₁ ∨
+
+¬ e₁ = e₂ ∧   r₁ ∧ ¬ r₂ ∧   e₁ < e₂ ∧ ¬ e₂ < e₁ ∨
+¬ e₁ = e₂ ∧   r₁ ∧ ¬ r₂ ∧ ¬ e₁ < e₂ ∧   e₂ < e₁ ∨
+¬ e₁ = e₂ ∧ ¬ r₁ ∧ ¬ r₂ ∧   e₁ < e₂ ∧ ¬ e₂ < e₁ ∨
+¬ e₁ = e₂ ∧ ¬ r₁ ∧   r₂ ∧   e₁ < e₂ ∧ ¬ e₂ < e₁ ∨
+¬ e₁ = e₂ ∧ ¬ r₁ ∧   r₂ ∧ ¬ e₁ < e₂ ∧   e₂ < e₁ ∨
+¬ e₁ = e₂ ∧ ¬ r₁ ∧ ¬ r₂ ∧ ¬ e₁ < e₂ ∧   e₂ < e₁ ∨
+
+

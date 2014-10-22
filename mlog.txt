@@ -1,0 +1,6 @@
+Map!(int, int)
+φ(get(key₁)/r₁, get(key₂)/r₂): key₁ ≠ key₂∨ r₁ = r₂
+φ(get(key₁)/r₁, put(key₂,value₂)/r₂): key₁ ≠ key₂∨ r₁ = r₂∧ r₁ = value₂
+φ(get(key₁)/r₁, size()/r₂): true
+φ(put(key₁,value₁)/r₁, size()/r₂): r₂ ≤ r₁
+φ(size()/r₁, size()/r₂): r₁ = r₂
