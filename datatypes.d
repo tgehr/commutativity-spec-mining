@@ -167,3 +167,48 @@ struct ArrayList(T){
 
 	T[] data;
 }
+
+
+int dist(int a,int b){ return a>b?a-b:b-a; }
+@useFunction!dist
+struct KDTree(T){ // (dummy implementation)
+	KDTree clone(){ return KDTree(data.dup); }
+	bool opEquals(KDTree rhs){ return data==rhs.data; }
+	@either!("t",useDefault!"t",sampleFrom!("t","data"))
+	bool add(T t){
+		auto len=data.length;
+		data~=t;
+		import std.algorithm, std.array;
+		data=data.sort.uniq.array;
+		return data.length>len;
+	}
+	@either!("t",useDefault!"t",sampleFrom!("t","data"))
+	bool remove(T t){
+		auto len=data.length;
+		foreach(i,x;data)
+			if(x==t){
+				foreach(j;i+1..data.length)
+					data[j-1]=data[j];
+				import std.array;
+				data.popBack();
+				data.assumeSafeAppend();
+				break;
+			}
+		return data.length<len; // TODO: support void
+	}
+	@either!("t",useDefault!"t",sampleFrom!("t","data"))
+	T nearest(T t){
+		T min=dist(data[0],t);
+		T near=data[0]; // (will crash sometimes)
+		foreach(x;data[1..$]){
+			auto nm=dist(x,t);
+			if(nm<min){
+				min=nm;
+				near=x;
+			}
+		}
+		return near;
+	}
+
+	T[] data;
+}

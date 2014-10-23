@@ -1,4 +1,3 @@
-
 ArrayList!int
 φ(add_at(i₁,v₁)/r₁, add_at(i₂,v₂)/r₂): i₁ = i₂∧ v₁ = v₂
 φ(add_at(i₁,v₁)/r₁, get(i₂)/r₂): i₂ < i₁
@@ -16,7 +15,7 @@ ArrayList!int
 φ(indexOf(v₁)/r₁, indexOf(v₂)/r₂): true
 φ(indexOf(v₁)/r₁, lastIndexOf(v₂)/r₂): true
 φ(indexOf(v₁)/r₁, remove_at(i₂)/r₂): false
-φ(indexOf(v₁)/r₁, set(i₂,x₂)/r₂): r₁ ≠ r₂∧ r₁ = v₁∧ r₁ ≤ r₂∧ r₂ < i₂∨ r₂ ≠ v₁∧ v₁ ≠ x₂∨ r₂ = x₂
+φ(indexOf(v₁)/r₁, set(i₂,x₂)/r₂): r₂ ≠ v₁∧ v₁ ≠ x₂∨ r₂ = x₂
 φ(indexOf(v₁)/r₁, size()/r₂): true
 φ(lastIndexOf(v₁)/r₁, lastIndexOf(v₂)/r₂): true
 φ(lastIndexOf(v₁)/r₁, remove_at(i₂)/r₂): false
@@ -25,9 +24,13 @@ ArrayList!int
 φ(remove_at(i₁)/r₁, remove_at(i₂)/r₂): i₁ = i₂
 φ(remove_at(i₁)/r₁, set(i₂,x₂)/r₂): i₂ < i₁
 φ(remove_at(i₁)/r₁, size()/r₂): false
-φ(set(i₁,x₁)/r₁, set(i₂,x₂)/r₂): i₁ ≠ i₂∨ r₁ = x₁∧ r₂ = x₂
+φ(set(i₁,x₁)/r₁, set(i₂,x₂)/r₂): i₁ ≠ i₂∨ r₁ = r₂∧ x₁ = x₂
 φ(set(i₁,x₁)/r₁, size()/r₂): true
 φ(size()/r₁, size()/r₂): true
+
+real	3m38.009s
+user	3m37.643s
+sys	0m0.205s
 
 
 ArrayList!int

@@ -74,3 +74,6 @@ struct sampleFrom(string parameter,string array){
 		}
 	}
 }
+
+@annotation
+struct useFunction(alias a){}

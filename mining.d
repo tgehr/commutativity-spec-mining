@@ -88,13 +88,17 @@ void main(){
 	//writeln(inferOccamSpec!(Map!(int,int),"put","put"));
 	//writeln(inferOccamSpec!(RangeUpdate,"add2","add2"));
 	
-	/+printSpecs!(Set!int);
+	// captured precisely in the fragment:
+	printSpecs!(Set!int);
 	printSpecs!(MultiSet!int);
 	printSpecs!(MaxRegister!int);
 	printSpecs!(Map!(int,int));
-	printSpecs!RangeUpdate;+/
-	printSpecs!(ArrayList!int);
+	printSpecs!RangeUpdate;
+	printSpecs!(KDTree!int); // "1DTree"
 	
+	// mpt captured precisely in the fragment
+	//printSpecs!(ArrayList!int);
+	//writeln(inferOccamSpec!(ArrayList!int,"indexOf","set"));
  
 	
 	/+//(r₁ < v₁∨ v₂ ≤ r₁)∧ r₁ = r₂∧ (v₁ ≤ v₂∨ v₂ ≤ r₁)

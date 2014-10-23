@@ -520,7 +520,7 @@ auto runExploration(T, string m1, string m2, alias putResult=Void)(){
 	}
 	void randomExploration(int max){
 		T t;
-		enum maxNumInactive=300000;
+		auto maxNumInactive=long.max;
 		int numInactive=0;
 		for(int i=0;(i<50000||i<exploration.count()*50000)&&i<max&&!exploration.foundAll()&&numInactive<maxNumInactive;i++){
 			if(!uniform(0,10)) t=T.init;
@@ -545,6 +545,7 @@ auto runExploration(T, string m1, string m2, alias putResult=Void)(){
 			if(!c) addResult(a,res[1],c);
 			// if(nr!=exploration.count()) writeln("found result using ",t);
 			version(VERBOSE) if(!(i%10000)) writeln("iteration #",i,"\t #results found: ",exploration.count());
+			maxNumInactive=1000*exploration.count();
 		}
 	}
 	void boundedExhaustiveExploration(int intLowerBound,int intUpperBound,size_t numOps){
@@ -616,8 +617,8 @@ auto runExploration(T, string m1, string m2, alias putResult=Void)(){
 	//boundedExhaustiveExploration(-2,2,3);
 	//boundedExhaustiveExploration(0,1,3);
 	//randomExploration(2000000);
-	//randomExploration(5000);
-	randomExploration(500000);
+	//randomExploration(500000);
+	randomExploration(5000);
 	//writeln("tried ",numFound, " assignments");
 	// if(numFound != (1<<atoms.length)) writeln("warning: not all combinations of atoms satisfied");
 	version(VERBOSE) writeln("number of variations found: ",exploration.count());
