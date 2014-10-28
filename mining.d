@@ -90,14 +90,21 @@ void main(){
 	
 	// captured precisely in the fragment:
 	printSpecs!(Set!int);
+	printSpecs!(Map!(int,int));
 	printSpecs!(MultiSet!int);
 	printSpecs!(MaxRegister!int);
-	printSpecs!(Map!(int,int));
 	printSpecs!RangeUpdate;
-	printSpecs!(KDTree!int); // "1DTree"
+	printSpecs!(KDTree!int); // "1DTree"+/
 	
-	// mpt captured precisely in the fragment
-	//printSpecs!(ArrayList!int);
+	// not captured precisely in the fragment
+	printSpecs!Accumulator;
+	printSpecs!(UnionFind!"default");
+	printSpecs!(UnionFind!"min");
+	printSpecs!(UnionFind!"deterministic");
+	printSpecs!(UnionFind!("default",false));
+	printSpecs!(UnionFind!("min",false));
+	printSpecs!(UnionFind!("deterministic",false));
+	printSpecs!(ArrayList!int);
 	//writeln(inferOccamSpec!(ArrayList!int,"indexOf","set"));
  
 	

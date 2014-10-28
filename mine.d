@@ -617,8 +617,8 @@ auto runExploration(T, string m1, string m2, alias putResult=Void)(){
 	//boundedExhaustiveExploration(-2,2,3);
 	//boundedExhaustiveExploration(0,1,3);
 	//randomExploration(2000000);
-	//randomExploration(500000);
-	randomExploration(5000);
+	randomExploration(500000);
+	//randomExploration(5000);
 	//writeln("tried ",numFound, " assignments");
 	// if(numFound != (1<<atoms.length)) writeln("warning: not all combinations of atoms satisfied");
 	version(VERBOSE) writeln("number of variations found: ",exploration.count());

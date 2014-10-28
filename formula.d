@@ -760,6 +760,42 @@ Formula factorLtEq(Formula f){
 	return or(s);
 }
 
+Formula factorGreedily(Formula f){
+	auto o=cast(Or)f;
+	if(!o) return f; // TODO: distributivity also holds the other way!
+	for(;;){
+		auto max=tuple(cast(size_t)0,cast(size_t)0);
+		FormulaSet cnj;
+		size_t countOccurrences(FormulaSet s){
+			size_t r=0;
+			foreach(dsj;f.disjuncts)
+				if(s.subset(dsj.conjuncts))
+					r++;
+			return r;
+		}
+		foreach(dsj;f.disjuncts){
+			foreach(subs;dsj.conjuncts.subsets){
+				if(!subs.length) continue;
+				auto c=countOccurrences(subs);
+				auto t=tuple(c,subs.length);
+				if(t>max){
+					max=t;
+					cnj=subs;
+				}
+			}
+		}
+		if(max[0]<=1) return f;
+		FormulaSet newDisjuncts;
+		FormulaSet oldDisjuncts;
+		foreach(dsj;f.disjuncts)
+			if(cnj.subset(dsj.conjuncts))
+				newDisjuncts.insert(and(dsj.conjuncts.setMinus(cnj)));
+			else
+				oldDisjuncts.insert(dsj);
+		f=and(or(newDisjuncts),and(cnj)).or(or(oldDisjuncts)).normalize;
+	}
+}
+
 Formula simplify(Formula f){
 	auto oldf=f;
 	f=f.normalize();

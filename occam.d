@@ -14,6 +14,7 @@ auto inferOccamSpec(T, string m1, string m2)(){
 	version(VERY_VERBOSE) writeln(bp,"\n",s);
 	//writeln(bp.length," ",bp);
 	auto f=greedyEquivalentTo(s,bp);
+	f=f.factorGreedily();
 	//auto f=minimalEquivalentTo(s,bp);
 	//auto f=monteCarloMarkovChainEquivalentTo(s,bp);
 	if(!f) f=s.getFormula();

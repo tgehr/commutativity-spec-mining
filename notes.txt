@@ -1,3 +1,15 @@
+UnionFind
+φ(add()/r₁, add()/r₂): true
+φ(add()/r₁, find(x₂)/r₂): true
+φ(add()/r₁, unite(a₂,b₂)/r₂): true
+φ(find(x₁)/r₁, find(x₂)/r₂): true
+φ(find(x₁)/r₁, unite(a₂,b₂)/r₂): a₂ < r₁∧ b₂ < r₁∨ r₂
+φ(unite(a₁,b₁)/r₁, unite(a₂,b₂)/r₂): (a₁ = b₁∨ a₂ = b₁)∧ b₁ = b₂∨ b₁ = b₂∧ ¬ r₁∧ ¬ r₂∨ r₁∧ r₂
+
+real	0m10.197s
+user	0m10.185s
+sys	0m0.005s
+
 ArrayList!int
 φ(add_at(i₁,v₁)/r₁, add_at(i₂,v₂)/r₂): i₁ = i₂∧ v₁ = v₂
 φ(add_at(i₁,v₁)/r₁, get(i₂)/r₂): i₂ < i₁

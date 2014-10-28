@@ -194,3 +194,21 @@ void main(){
 	auto t=hset!(a=>a.toHash(),(a,b)=>a==b)([s]);
 	writeln(s !in t);
 }+/
+
+struct Subsets(T){
+	typeof(T.init.array) arr;
+	int opApply(scope int delegate(T) dg){
+		T cur;
+		int enumerate(size_t i){
+			if(i>=arr.length) return dg(cur.dup);
+			if(auto r=enumerate(i+1)) return r;
+			cur.insert(arr[i]);
+			if(auto r=enumerate(i+1)) return r;
+			cur.remove(arr[i]);
+			return 0;
+		}
+		return enumerate(0);
+	}
+}
+
+auto subsets(T)(T arg){ return Subsets!T(arg.array); }
