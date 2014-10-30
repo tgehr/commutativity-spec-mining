@@ -18,9 +18,9 @@ struct Set(T){
 		return r;
 	}
 
-	bool has(T e){ return !!(e in elems); }
-	bool add(T e){ auto r=has(e); elems[e]=[]; return !r; }
-	bool remove(T e){ auto r=has(e); elems.remove(e); return r; }
+	bool contains(T e){ return !!(e in elems); }
+	bool add(T e){ auto r=contains(e); elems[e]=[]; return !r; }
+	bool remove(T e){ auto r=contains(e); elems.remove(e); return r; }
 	int size(){ return cast(int)elems.length; }
 }
 
@@ -92,9 +92,11 @@ struct MaxRegister(T){
 int construct(T)(int lower=int.min,int upper=int.max)if(is(T==int)){
 	if(lower>=upper) upper=lower+1; // TODO: ok?
 	static int[] values;
-	if(values.length&&!uniform(0,10)) return values[uniform(0,$)];
+	if(lower==int.min&&upper==int.max){
+		if(values.length&&!uniform(0,10)) return values[uniform(0,$)];
+	}
 	if(values.length>100){ values.length=0; values.assumeSafeAppend(); }
-	values~=uniform!"[)"(max(lower,-100),min(upper,101)); // TODO: ok?
+	values~=uniform!"[)"(max(lower,-100),min(upper,101));
 	return values[$-1];
 }
 bool construct(T)()if(is(T==bool)){ return !!uniform(0,2); }
@@ -201,6 +203,7 @@ struct ArrayList(T){
 		return true; // TODO: support void
 	}
 	@bounded!("i",`0`,`cast(int)data.length`)
+	@bounded!("x",`-10`,`11`)
 	T set(int i,T x){
 		T r=data[i];
 		data[i]=x;

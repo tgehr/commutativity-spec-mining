@@ -1,4 +1,5 @@
 module formula;
+__gshared: // (necessary for hacky timeout implementation)
 
 import std.stdio, std.conv, std.algorithm, std.range, std.array;
 

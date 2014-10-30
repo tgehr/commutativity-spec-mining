@@ -24,7 +24,10 @@ template isSamplerFor(alias method, string parameter, alias sampler){
 }
 
 @annotation
-struct sampler(string parameter,string sampleIt){
+struct sampler(string parameter,string sampleIt,string possible=`true`){
+	bool canSample(T)(ref T d){
+		with(d) return mixin(possible);
+	}
 	auto sample(T,alias method)(ref T d){
 		enum parameterType={
 			alias pt=ParameterTypeTuple!method;
@@ -50,17 +53,22 @@ struct useDefault(string parameter){
 @annotation
 struct either(string parameter,samplers...){ // TODO: constrain?
 	auto sample(T,alias method)(ref T d){
+		// TODO: canSample
 		switch(uniform(0,samplers.length)){
 			foreach(i,sampler;samplers)
 			case i: return sampler().sample!(T,method)(d);
 		default: assert(0);
 		}
 	}
+	bool canSample(T)(ref T d){
+		foreach(i,sampler;samplers) if(sampler().canSample(d)) return true;
+		return false;
+	}
 }
 
 @annotation 
 struct bounded(string parameter,string lower, string upper){
-	sampler!(parameter,"construct!(typeof("~parameter~"))("~lower~","~upper~")") theSampler;
+	sampler!(parameter,"construct!(typeof("~parameter~"))("~lower~","~upper~")",lower~"<"~upper) theSampler;
 	alias theSampler this;
 }
 
@@ -73,6 +81,7 @@ struct sampleFrom(string parameter,string array){
 			return _arr35889[uniform(0,$)];
 		}
 	}
+	bool canSample(T)(ref T d){ with(d) return !!mixin(array).length; }
 }
 
 @annotation

@@ -36,6 +36,7 @@ void modify(T)(ref T t){
 				foreach(j,ref x;args){
 					alias sampler=obtainSamplerFor!(method,argNames[j]);
 					//x=construct!(typeof(x))();
+					if(!sampler().canSample(t)) return;
 					x=sampler().sample!(T,method)(t);
 				}
 				try{ auto nt=t.clone(); mixin("nt."~m)(args); t=nt; }catch{}
@@ -51,7 +52,7 @@ struct MethodArgs{
 	bool[] bools;
 }
 
-void sampleArgsWithSamplers(alias method,T)(MethodArgs ma, ref T t){
+bool sampleArgsWithSamplers(alias method,T)(MethodArgs ma, ref T t){
 	int[] ints=ma.ints;
 	bool[] bools=ma.bools;
 	alias argts=ParameterTypeTuple!method;
@@ -59,17 +60,22 @@ void sampleArgsWithSamplers(alias method,T)(MethodArgs ma, ref T t){
 	foreach(j,S;argts){
 		alias sampler=obtainSamplerFor!(method,argNames[j]);
 		static if(!is(sampler==useDefault!(argNames[j]))){
+			if(!sampler().canSample(t)) return false;
 			auto v=sampler().sample!(T,method)(t);
-			static if(is(S==int)){
-				ints.front=v;
-				ints.popFront();
-			}else{
+			static if(is(S==int)) ints.front=v;
+			else{
 				static assert(is(S==bool));
 				bools.front=v;
-				bools.popFront();
 			}
 		}
+		static if(is(S==int))
+			ints.popFront();
+		else{
+			static assert(is(S==bool));
+			bools.popFront();
+		}
 	}
+	return true;
 }
 
 Value runMethod(string m,T)(ref T arg, MethodArgs args){
@@ -443,15 +449,18 @@ FormulaSet extractRelevantBasicPredicates(alias incompat=soundincompat,bool occa
 		foreach(y;ints){
 			if(x is y) continue;
 			auto be=s.intEquatable!(incompat,occam)(x,y);
+			// be=[false,false];
 			if(!be[0]||!occam&&!be[1]) r.insert(x.eq(y));
 			if(!be[1]||!occam&&!be[0]) r.insert(not(x.eq(y)));
 			auto bs=s.intSymmetric!incompat(x,y);
+			// bs=[false,false];
 			if(!bs[0]||!occam&&!bs[1]) r.insert(x.lt(y));
 			if(!bs[1]||!occam&&!bs[0]) r.insert(not(x.lt(y)));
 		}
 	}
 	foreach(x;bools){
 		auto b=s.boolSymmetric!incompat(x);
+		// b=[false,false];
 		if(!b[0]||!occam&&!b[1]) r.insert(x);
 		if(!b[1]||!occam&&!b[0]) r.insert(not(x));
 	}
@@ -459,17 +468,17 @@ FormulaSet extractRelevantBasicPredicates(alias incompat=soundincompat,bool occa
 }
 
 
-auto inferSoundSpec(T, string m1, string m2)(){
+auto inferSoundSpec(T, string m1, string m2)(int numSamples){
 	ResultStore s;
 	void addSoundResult(Assignment a,bool c){
 		s.addResult(a,c);
 	}
-	runExploration!(T,m1,m2,addSoundResult);
+	runExploration!(T,m1,m2,addSoundResult)(numSamples);
 	auto bp=extractRelevantBasicPredicates(s).array;
 	return s.getFormula().minimalEquivalent(bp);
 }
 private struct Void{}
-auto runExploration(T, string m1, string m2, alias putResult=Void)(){
+auto runExploration(T, string m1, string m2, alias putResult=Void)(int numSamples=5000){
 	alias m1a=ID!(mixin("T."~m1));
 	alias m2a=ID!(mixin("T."~m2));
 	alias ty1=Seq!(ParameterTypeTuple!m1a,ReturnType!m1a);
@@ -523,7 +532,7 @@ auto runExploration(T, string m1, string m2, alias putResult=Void)(){
 		auto maxNumInactive=long.max;
 		int numInactive=0;
 		for(int i=0;(i<50000||i<exploration.count()*50000)&&i<max&&!exploration.foundAll()&&numInactive<maxNumInactive;i++){
-			if(!uniform(0,10)) t=T.init;
+			if(!uniform(0,100)) t=T.init;
 			foreach(_;0..uniform(0,10)) modify(t);
 			exploration.randomlyFindArgs(a);
 			if(uniform(0,2)){ // try to observe the same class multiple times as well
@@ -533,9 +542,10 @@ auto runExploration(T, string m1, string m2, alias putResult=Void)(){
 				}
 			}
 			////
-			sampleArgsWithSamplers!m1a(a[0],t);
-			sampleArgsWithSamplers!m2a(a[1],t);
+			if(!sampleArgsWithSamplers!m1a(a[0],t)){ --i; continue; }
+			if(!sampleArgsWithSamplers!m2a(a[1],t)){ --i; continue; }
 			////
+			// if(!(i%10000)) writeln(i);
 			Value[2][2] res;
 			bool c;
 			try c=doCommute!(m1,m2)(t,a,res); catch{ --i; continue; }
@@ -617,8 +627,9 @@ auto runExploration(T, string m1, string m2, alias putResult=Void)(){
 	//boundedExhaustiveExploration(-2,2,3);
 	//boundedExhaustiveExploration(0,1,3);
 	//randomExploration(2000000);
-	randomExploration(500000);
+	//randomExploration(500000);
 	//randomExploration(5000);
+	randomExploration(numSamples);
 	//writeln("tried ",numFound, " assignments");
 	// if(numFound != (1<<atoms.length)) writeln("warning: not all combinations of atoms satisfied");
 	version(VERBOSE) writeln("number of variations found: ",exploration.count());

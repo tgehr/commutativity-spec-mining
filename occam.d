@@ -3,12 +3,12 @@ import mine, formula;
 import hashtable;
 
 
-auto inferOccamSpec(T, string m1, string m2)(){
+auto inferOccamSpec(T, string m1, string m2)(int numSamples=5000){
 	ResultStore s;
 	void addOccamResult(Assignment a,bool c){
 		s.addResult(a,c);
 	}
-	runExploration!(T,m1,m2,addOccamResult);
+	runExploration!(T,m1,m2,addOccamResult)(numSamples);
 	s=s.maybeToNo();
 	auto bp=extractRelevantBasicPredicates!(incompat,true)(s).array;
 	version(VERY_VERBOSE) writeln(bp,"\n",s);

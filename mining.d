@@ -9,7 +9,7 @@ import util;
 //alias defaultInferenceMethod=inferSoundSpec;
 alias defaultInferenceMethod=inferOccamSpec;
 
-void printSpecs(T,alias inferenceMethod=defaultInferenceMethod)(){
+void printSpecs(T,alias inferenceMethod=defaultInferenceMethod)(int numSamples=5000){
 	writeln(T.stringof);
 	alias m=Seq!(__traits(allMembers,T));
 	bool dontConsider(string s){
@@ -27,7 +27,7 @@ void printSpecs(T,alias inferenceMethod=defaultInferenceMethod)(){
 					auto t2=(cast(string[])[i2]).map!(a=>(a~"₂")).array;
 					write("φ(",m[i],"(",t1.join(","),")/r₁, ",m[j],"(",t2.join(","),")/r₂): ");
 					stdout.flush();
-					auto spec=inferenceMethod!(T,m[i],m[j]);
+					auto spec=inferenceMethod!(T,m[i],m[j])(numSamples);
 					//writeln("φ(",m[i],"(",t1.join(","),")/r₁, ",m[j],"(",t2.join(","),")/r₂): ",spec);
 					writeln(spec);
 				}
@@ -87,25 +87,29 @@ void main(){
 	//writeln(inferOccamSpec!(Map!(int,int),"get","get"));
 	//writeln(inferOccamSpec!(Map!(int,int),"put","put"));
 	//writeln(inferOccamSpec!(RangeUpdate,"add2","add2"));
+
+	import experiments;
+	runExperiments();
 	
-	// captured precisely in the fragment:
+	/+// captured precisely in the fragment:
 	printSpecs!(Set!int);
 	printSpecs!(Map!(int,int));
 	printSpecs!(MultiSet!int);
 	printSpecs!(MaxRegister!int);
 	printSpecs!RangeUpdate;
-	printSpecs!(KDTree!int); // "1DTree"+/
-	
+	printSpecs!(KDTree!int); // "1DTree"
 	// not captured precisely in the fragment
+	enum many=30000;
+	enum more=50000;
 	printSpecs!Accumulator;
-	printSpecs!(UnionFind!"default");
-	printSpecs!(UnionFind!"min");
-	printSpecs!(UnionFind!"deterministic");
-	printSpecs!(UnionFind!("default",false));
-	printSpecs!(UnionFind!("min",false));
-	printSpecs!(UnionFind!("deterministic",false));
-	printSpecs!(ArrayList!int);
-	//writeln(inferOccamSpec!(ArrayList!int,"indexOf","set"));
+	printSpecs!(UnionFind!"default")(many);
+	printSpecs!(UnionFind!"min")(many);
+	printSpecs!(UnionFind!"deterministic")(many);
+	printSpecs!(UnionFind!("default",false))(many);
+	printSpecs!(UnionFind!("min",false))(many);
+	printSpecs!(UnionFind!("deterministic",false))(many);
+	printSpecs!(ArrayList!int)(400000);+/
+	//writeln(inferOccamSpec!(ArrayList!int,"indexOf","set")(30000));
  
 	
 	/+//(r₁ < v₁∨ v₂ ≤ r₁)∧ r₁ = r₂∧ (v₁ ≤ v₂∨ v₂ ≤ r₁)
