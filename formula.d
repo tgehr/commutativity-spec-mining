@@ -112,6 +112,13 @@ abstract class UnaryOp: Operator{
 	}
 }
 
+void resetUniqueMaps(){
+	uniqueMapCommutative=typeof(uniqueMapCommutative).init;
+	uniqueMapCommutAssocIdem=typeof(uniqueMapCommutAssocIdem).init;
+	uniqueMapNonCommutAssocIdem=typeof(uniqueMapNonCommutAssocIdem).init;
+	uniqueMapUnary=typeof(uniqueMapUnary).init;
+}
+
 MapX!(TupleX!(typeof(typeid(Formula)),UPF),Formula) uniqueMapCommutative;
 auto uniqueFormulaCommutative(T)(Formula e1, Formula e2){
 	if(auto t1=cast(Terminal)e1)

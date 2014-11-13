@@ -36,7 +36,67 @@ void printSpecs(T,alias inferenceMethod=defaultInferenceMethod)(int numSamples=5
 	}
 }
 
+Formula obtainDemoSpec(){
+	ResultStore s;
+	auto k1="k₁".t,k2="k₂".t,v1="v₁".t,v2="v₂".t,r1="r₁".t,r2="r₂".t;
+	auto terms=[k1,v1,r1,k2,v2,r2];
+	void add(int k1,int v1,int r1,int k2,int v2,int r2){
+		writeln(k1!=k2||v1==r1&&v2==r2);
+		s.addResult(Assignment(terms,[Value(k1),Value(v1),Value(r1),Value(k2),Value(v2),Value(r2)]),
+					k1!=k2||v1==r1&&v2==r2);
+	}
+	/+int[6][20] array;
+	import std.random;
+	foreach(ref a;array){
+		foreach(ref x;a)
+			x=uniform(0,5);
+		add(a[0],a[1],a[2],a[3],a[4],a[5]);
+	}
+	writeln(array);+/
+	/+foreach(a;[[0, 2, 1, 0, 2, 2], [2, 3, 4, 1, 0, 3], [1, 4, 3, 2, 2, 4]]){
+		add(a[0],a[1],a[2],a[3],a[4],a[5]);
+	}+/
+	
+	add(1,0,0,2,0,-1);
+	add(2,0,-2,1,0,-1);
+	add(1,2,2,1,1,2);
+	add(1,-1,-1,1,1,-1);
+
+
+	/*add(2,3,3,2,2,2);
+	add(3,3,3,3,3,2);
+	add(4,3,1,4,3,2);
+	add(4,3,2,4,3,1);
+	add(0,3,2,0,3,1);
+	add(0,3,1,0,3,2);
+
+	add(3,3,2,3,3,3);*/
+	// add(3,3,2,3,3,3);
+
+
+
+	/+add(0,0,0,1,-3,0,true);
+	add(0,0,0,1,3,0,true);
+	add(1,2,-3,0,1,0,true);
+	add(1,2,-3,1,3,2,false);
+	add(1,2,3,1,3,-3,false);+/
+	//[1, 3, 0, 4, 1, 3], [3, 2, 0, 2, 4, 1], [2, 0, 1, 0, 0, 0], [1, 1, 2, 1, 3, 4], [0, 1, 3, 2, 2, 0]
+	//[3, 4, 3, 2, 4, 2], [1, 2, 0, 1, 2, 0], [0, 2, 0, 0, 4, 0], [4, 0, 0, 0, 4, 3]
+	//[0, 2, 1, 0, 2, 2], [2, 3, 4, 1, 0, 3], [1, 4, 3, 2, 2, 4]
+	auto bp=extractRelevantBasicPredicates!(incompat,true,true)(s).array;
+	version(VERY_VERBOSE) writeln(bp,"\n",s);
+	auto f=greedyEquivalentTo(s,bp);
+	f=f.factorGreedily();
+	//auto f=minimalEquivalentTo(s,bp);
+	//auto f=s.getFormula();
+	
+	return f;
+}
+
 void main(){
+	// writeln(obtainDemoSpec());
+	//writeln(inferOccamSpec!(Map!(int,int),"put","put")(5));
+
 	/+//code for generating some of the report
 	/+auto a="a".t,b="b".t,c="c".t,d="d".t;
 	//a < b ∧ b < c ∨ b < a ∧ b ≠ c
@@ -88,10 +148,10 @@ void main(){
 	//writeln(inferOccamSpec!(Map!(int,int),"put","put"));
 	//writeln(inferOccamSpec!(RangeUpdate,"add2","add2"));
 
-	import experiments;
-	runExperiments();
+	/+import experiments;
+	runExperiments();+/
 	
-	/+// captured precisely in the fragment:
+	// captured precisely in the fragment:
 	printSpecs!(Set!int);
 	printSpecs!(Map!(int,int));
 	printSpecs!(MultiSet!int);
@@ -102,13 +162,13 @@ void main(){
 	enum many=30000;
 	enum more=50000;
 	printSpecs!Accumulator;
-	printSpecs!(UnionFind!"default")(many);
-	printSpecs!(UnionFind!"min")(many);
-	printSpecs!(UnionFind!"deterministic")(many);
 	printSpecs!(UnionFind!("default",false))(many);
 	printSpecs!(UnionFind!("min",false))(many);
-	printSpecs!(UnionFind!("deterministic",false))(many);
-	printSpecs!(ArrayList!int)(400000);+/
+	printSpecs!(UnionFind!("deterministic",false))(more);
+	printSpecs!(UnionFind!"default")(many);
+	printSpecs!(UnionFind!"min")(more);
+	printSpecs!(UnionFind!"deterministic")(more);
+	printSpecs!(ArrayList!int)(600000);
 	//writeln(inferOccamSpec!(ArrayList!int,"indexOf","set")(30000));
  
 	

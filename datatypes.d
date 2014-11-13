@@ -182,13 +182,13 @@ struct ArrayList(T){
 	@bounded!("i",`0`,`cast(int)data.length`)
 	int get(int i){ return data[i]; }
 
-	@either!("v",sampleFrom!("v","data"),useDefault!"v")
+	@either!("v",sampleFrom!("v","data"),bounded!("v",`-10`,`11`))
 	int indexOf(int v){
 		foreach(i,x;data) if(v==x) return cast(int)i;
 		return -1;
 	}	
 
-	@either!("v",sampleFrom!("v","data"),useDefault!"v")
+	@either!("v",sampleFrom!("v","data"),bounded!("v",`-10`,`11`))
 	int lastIndexOf(int v){
 		foreach_reverse(i,x;data) if(v==x) return cast(int)i;
 		return -1;

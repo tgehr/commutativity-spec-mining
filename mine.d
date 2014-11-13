@@ -441,28 +441,32 @@ ResultStore maybeToNo(ResultStore s){
 }
 
 private bool soundincompat(Quat a,Quat b){ return (a==Quat.yes)^(b==Quat.yes); }
-FormulaSet extractRelevantBasicPredicates(alias incompat=soundincompat,bool occam=false)(ResultStore s){
+FormulaSet extractRelevantBasicPredicates(alias incompat=soundincompat,bool occam=false,bool returnAll=false)(ResultStore s){
 	FormulaSet r;
 	auto ints=s.terms(Type.int_);
 	auto bools=s.terms(Type.bool_);
+	foreach(x;bools){
+		static if(!returnAll) auto b=s.boolSymmetric!incompat(x);
+		else bool[2] b=[false,false];
+		if(!b[0]||!occam&&!b[1]) r.insert(x);
+		if(!b[1]||!occam&&!b[0]) r.insert(not(x));
+	}
 	foreach(x;ints){
 		foreach(y;ints){
 			if(x is y) continue;
-			auto be=s.intEquatable!(incompat,occam)(x,y);
-			// be=[false,false];
+			static if(!returnAll) auto be=s.intEquatable!(incompat,occam)(x,y);
+			else bool[2] be=[false,false];
 			if(!be[0]||!occam&&!be[1]) r.insert(x.eq(y));
 			if(!be[1]||!occam&&!be[0]) r.insert(not(x.eq(y)));
-			auto bs=s.intSymmetric!incompat(x,y);
-			// bs=[false,false];
-			if(!bs[0]||!occam&&!bs[1]) r.insert(x.lt(y));
-			if(!bs[1]||!occam&&!bs[0]) r.insert(not(x.lt(y)));
 		}
 	}
-	foreach(x;bools){
-		auto b=s.boolSymmetric!incompat(x);
-		// b=[false,false];
-		if(!b[0]||!occam&&!b[1]) r.insert(x);
-		if(!b[1]||!occam&&!b[0]) r.insert(not(x));
+	foreach(x;ints){
+		foreach(y;ints){
+			static if(!returnAll) auto bs=s.intSymmetric!incompat(x,y);
+			else bool[2] bs=[false,false];
+			if(!bs[0]||!occam&&!bs[1]) r.insert(x.lt(y));
+			if(!bs[1]||!occam&&!bs[0]) r.insert(not(x.lt(y)));			
+		}
 	}
 	return r;
 }
@@ -532,7 +536,7 @@ auto runExploration(T, string m1, string m2, alias putResult=Void)(int numSample
 		auto maxNumInactive=long.max;
 		int numInactive=0;
 		for(int i=0;(i<50000||i<exploration.count()*50000)&&i<max&&!exploration.foundAll()&&numInactive<maxNumInactive;i++){
-			if(!uniform(0,100)) t=T.init;
+			if(!uniform(0,10)) t=T.init;
 			foreach(_;0..uniform(0,10)) modify(t);
 			exploration.randomlyFindArgs(a);
 			if(uniform(0,2)){ // try to observe the same class multiple times as well

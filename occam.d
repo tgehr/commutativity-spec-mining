@@ -115,6 +115,7 @@ private:
 	HashMap!(Formula,EquivOnFormula,(a,b)=>a is b, a=>a.toHash()) hashesMap; // TODO: this is a hack.
 }
 
+// version=VERY_VERBOSE;
 Formula minimalEquivalentTo(ResultStore s,Formula[] bp){
 	auto fhash=equivClassHashOf(s);
 	foreach(EquivOnFormula g;NonEquivalentMinimalFormulasOn!()(s,100,bp)){
@@ -125,7 +126,7 @@ Formula minimalEquivalentTo(ResultStore s,Formula[] bp){
 	}
 	return null;
 }
-//version=VERY_VERBOSE;
+// version=VERY_VERBOSE;
 
 
 size_t numSharedOn(Formula g, ResultStore s,size_t min){
@@ -153,6 +154,7 @@ ResultStore trueAssignments(ResultStore s){
 }
 
 Formula greedyEquivalentTo(ResultStore s,Formula[] bp){
+	if(ff.equivalentTo(s)) return ff;
 	Formula[] formulas;
 	Formula tryBuild(size_t maxNumDisjuncts)in{assert(formulas.length);}body{
 		auto tmps=s.trueAssignments();
