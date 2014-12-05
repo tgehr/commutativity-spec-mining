@@ -885,16 +885,16 @@ enum Type{
 	int_,
 }
 struct Value{
-	this(int r){ this.r=r; isbool=false; }
-	this(bool r){ this.r=r; isbool=true; }
-	@property Type type(){ return isbool?Type.bool_:Type.int_; }
+	this(int r){ this.r=r; tt=Type.int_; }
+	this(bool r){ this.r=r; tt=Type.bool_; }
+	@property Type type(){ return tt; }
 	int int_()in{assert(type==Type.int_);}body{ return r; }
 	bool bool_()in{assert(type==Type.bool_);}body{ return !!r; }
 
-	string toString(){ return isbool?(!!r).to!string:r.to!string; }
+	string toString(){ return tt==Type.bool_?(!!r).to!string:tt==Type.int_?r.to!string:"()"; }
 	int opCmp(Value b){ return type==b.type?(r==b.r?0:r<b.r?-1:1):type==Type.int_?-1:1; }
 private:
-	bool isbool;
+	Type tt;
 	int r;
 }
 

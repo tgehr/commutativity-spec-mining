@@ -92,7 +92,9 @@ Value runMethod(string m,T)(ref T arg, MethodArgs args){
 		}
 		return r~")";
 	}();
-	return Value(mixin(code));
+	static if(is(typeof(mixin(code))==void)){
+		return mixin(code),Value();
+	}else return Value(mixin(code));
 }
 
 bool doCommute(string m1, string m2, T)(ref T t,MethodArgs[2] args,ref Value[2][2] res){
@@ -510,13 +512,15 @@ auto runExploration(T, string m1, string m2, alias putResult=Void)(int numSample
 			tints~=t12[i];				
 			if(i<ty1.length+ty2.length-2) (i<ty1.length-1?ints1:ints2)~=0;
 			split~=Type.int_;
-		}else static assert(0,"unsupported parameter type: "~tt.stringof);		
+		}else static assert(is(tt==void),"unsupported parameter type: "~tt.stringof);		
 	}
 
 	static if(!is(putResult==Void)){
 		size_t nrint=is(ty1[$-1]==int)+is(ty2[$-1]==int);
 		size_t nrbool=is(ty1[$-1]==bool)+is(ty2[$-1]==bool);
-		Terminal[] terms=tints[0..$-nrint]~tbools[0..$-nrbool]~t1[$-1]~t2[$-1];
+		Terminal[] terms=tints[0..$-nrint]~tbools[0..$-nrbool];
+		static if(!is(ty1[$-1]==void)) terms~=t1[$-1];
+		static if(!is(ty2[$-1]==void)) terms~=t2[$-1];
 	}
 
 	MethodArgs[2] a=[MethodArgs(ints1,bools1),MethodArgs(ints2,bools2)];
@@ -528,18 +532,20 @@ auto runExploration(T, string m1, string m2, alias putResult=Void)(int numSample
 			putResult(Assignment(terms, chain(
 						chain(ints1,ints2).map!Value,
 						chain(bools1,bools2).map!Value,
-						res[]).array),c);
+						res[].filter!(a=>a.type!=Type.none_)).array),c);
 		}
 	}
 	void randomExploration(int max){
 		T t;
 		auto maxNumInactive=long.max;
 		int numInactive=0;
-		for(int i=0;(i<50000||i<exploration.count()*50000)&&i<max&&!exploration.foundAll()&&numInactive<maxNumInactive;i++){
+		for(int i=0;(i<50000||i<exploration.count()*50000)&&i<max&&numInactive<maxNumInactive;i++){
 			if(!uniform(0,10)) t=T.init;
 			foreach(_;0..uniform(0,10)) modify(t);
-			exploration.randomlyFindArgs(a);
-			if(uniform(0,2)){ // try to observe the same class multiple times as well
+			bool foundAll=false;
+			if(!exploration.foundAll()) exploration.randomlyFindArgs(a);
+			else foundAll=true;
+			if(foundAll||uniform(0,2)){ // try to observe the same class multiple times as well
 				foreach(ref ar;a){
 					foreach(ref x;ar.ints)x=construct!int();
 					foreach(ref x;ar.bools)x=construct!bool();

@@ -25,7 +25,8 @@ void printSpecs(T,alias inferenceMethod=defaultInferenceMethod)(int numSamples=5
 					alias i2=Seq!(ParameterIdentifierTuple!m2a);
 					auto t1=(cast(string[])[i1]).map!(a=>(a~"₁")).array;
 					auto t2=(cast(string[])[i2]).map!(a=>(a~"₂")).array;
-					write("φ(",m[i],"(",t1.join(","),")/r₁, ",m[j],"(",t2.join(","),")/r₂): ");
+					bool v1=is(ReturnType!m1a==void), v2=is(ReturnType!m2a==void);
+					write("φ(",m[i],"(",t1.join(","),")/",v1?"()":"r₁",", ",m[j],"(",t2.join(","),")/",v2?"()":"r₂","): ");
 					stdout.flush();
 					auto spec=inferenceMethod!(T,m[i],m[j])(numSamples);
 					//writeln("φ(",m[i],"(",t1.join(","),")/r₁, ",m[j],"(",t2.join(","),")/r₂): ",spec);
@@ -150,6 +151,8 @@ void main(){
 
 	/+import experiments;
 	runExperiments();+/
+
+	printSpecs!VoidTest;
 	
 	// captured precisely in the fragment:
 	printSpecs!(Set!int);

@@ -172,12 +172,11 @@ struct ArrayList(T){
 	auto clone(){ return ArrayList(data.dup); }
 
 	@bounded!("i",`0`,`cast(int)data.length+1`)
-	bool add_at(int i,T v){
+	void add_at(int i,T v){
 		data.length++;
 		foreach_reverse(j;i..data.length-1)
 			data[j+1]=data[j];
 		data[i]=v;
-		return true; // TODO: support void
 	}
 	@bounded!("i",`0`,`cast(int)data.length`)
 	int get(int i){ return data[i]; }
@@ -195,12 +194,11 @@ struct ArrayList(T){
 	}
 
 	@bounded!("i",`0`,`cast(int)data.length`)
-	bool remove_at(int i){
+	void remove_at(int i){
 		foreach(j;i..data.length-1)
 			data[j]=data[j+1];
 		data.length--;
 		data.assumeSafeAppend();
-		return true; // TODO: support void
 	}
 	@bounded!("i",`0`,`cast(int)data.length`)
 	@bounded!("x",`-10`,`11`)
@@ -217,9 +215,8 @@ struct ArrayList(T){
 struct Accumulator{
 	auto clone(){ return this; }
 	int value;
-	bool increase(int v){
+	void increase(int v){
 		value+=v;
-		return true; // TODO: support void
 	}
 	int read(){ return value; }
 }
@@ -238,10 +235,9 @@ struct UnionFind(string which, bool uniteReturnSuccess=true){
 			if(find(x)!=rhs.find(x)) return false;
 		return true;
 	}
-	bool add(){
+	void add(){
 		parents~=cast(int)parents.length;
 		minima~=parents[$-1];
-		return true; // TODO: void
 	}
 	@bounded!("x",`0`,`cast(int)parents.length`)
 	int find(int x){
@@ -260,8 +256,33 @@ struct UnionFind(string which, bool uniteReturnSuccess=true){
 		parents[pb]=parents[pa];
 		minima[pa]=min(minima[pa],minima[pb]);
 		static if(uniteReturnSuccess) return pa!=pb;
-		else return true; // TODO: support void
 	}
 	int[] parents;
 	int[] minima;
 }
+
+struct VoidTest{
+	void foo(int x){}
+	void bar(int x){}
+
+	VoidTest clone(){ return this; }
+}
+
+
+/+
+struct UndefRegister{
+	bool isDefined;
+	int value;
+	
+	bool initialize(){
+		bool v=isDefined;
+		isDefined=true;
+		return v;
+	}
+	bool update(int x){
+		isDefined=true;
+		value=x;
+		return 
+	}
+}
++/
