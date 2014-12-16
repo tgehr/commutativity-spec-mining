@@ -55,7 +55,7 @@ auto inferTimedOccamSpec(T, string m1, string m2)(int numSamples=5000, int searc
 	SpecStats stats;
 	ResultStore s;
 	int actualNumSamples=0;
-	void addOccamResult(Assignment a,bool c){
+	void addOccamResult(Assignment a,bool c,ref T t){
 		actualNumSamples++;
 		s.addResult(a,c);
 	}

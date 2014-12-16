@@ -268,6 +268,110 @@ struct VoidTest{
 	VoidTest clone(){ return this; }
 }
 
+struct ExistentialTest{
+	int[20] data;
+	@bounded!("i","0","cast(int)data.length")
+	void put(int i,int x){ data[i]=x; }
+
+	@bounded!("i","0","cast(int)data.length")
+	int get(int i){ return data[i]; }
+	
+	void add2until(int x){
+		foreach(ref y;data){
+			if(x==y) return;
+			y+=2;
+			if(y==x) y++;
+		}
+	}
+
+	void squareFrom(int x){
+		bool seen=false;
+		foreach(ref y;data){
+			if(seen){
+				y=y^^2;
+				if(y==x) y++;
+			}
+			if(x==y) seen=true;
+		}
+		if(!seen){
+			foreach(ref y;data){
+				y=y^^2;
+				if(y==x) y++;
+			}
+		}
+	}
+
+	ExistentialTest clone(){ return this; }
+}
+
+
+struct MultiSetTest(T){
+	int[T] elems;
+	bool opEquals(MultiSetTest rhs){ return elems==rhs.elems; }
+	MultiSetTest clone(){
+		int[T] nelems;
+		foreach(k,v;elems) nelems[k]=v;
+		return MultiSetTest(nelems,siz);
+	}
+	string toString(){
+		string r="{";
+		foreach(k,v;elems){
+			foreach(i;0..v)
+				r~=k.to!string()~", ";
+		}
+		r~="}";
+		return r;
+	}
+	
+	// bool has(T e){ return !!(e in elems); } // has and remove do not satisfy the soundness property
+	@bounded!("e","0","10")
+	int num(T e){ return elems.get(e,0); }
+
+	@bounded!("e","0","10")
+	bool contains(T e){ return num(e)>0; }
+
+	@bounded!("e","0","10")
+	void add(T e){ auto r=!!(e in elems); siz++; elems[e]=num(e)+1; }
+
+	@bounded!("e","0","10")
+	void remove(T e){
+		auto r=!!(e in elems);
+		if(r){
+			elems[e]--;
+			siz--;
+			if(!elems[e])
+				elems.remove(e);
+		}
+	}
+	int size(){ return siz; }
+//private:
+	int siz=0;
+}
+
+struct SetTest(T){
+	void[0][T] elems;
+	bool opEquals(SetTest rhs){ return elems==rhs.elems; }
+	SetTest clone(){
+		void[0][T] nelems;
+		foreach(k,v;elems) nelems[k]=v;
+		return SetTest(nelems);
+	}
+	string toString(){
+		string r="{";
+		foreach(k,_;elems) r~=k.to!string()~", ";
+		r~="}";
+		return r;
+	}
+
+	@bounded!("e","0","10")
+	bool contains(T e){ return !!(e in elems); }
+	@bounded!("e","0","10")
+	void add(T e){ elems[e]=[]; }
+	@bounded!("e","0","10")
+	void remove(T e){ elems.remove(e); }
+	int size(){ return cast(int)elems.length; }
+}
+
 
 /+
 struct UndefRegister{

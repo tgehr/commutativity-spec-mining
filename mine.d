@@ -526,13 +526,13 @@ auto runExploration(T, string m1, string m2, alias putResult=Void)(int numSample
 	MethodArgs[2] a=[MethodArgs(ints1,bools1),MethodArgs(ints2,bools2)];
 
 	auto exploration=ExploreStore(split);
-	void addResult(MethodArgs[2] a,Value[2] res,bool c){
+	void addResult(MethodArgs[2] a,Value[2] res,bool c,ref T t){
 		exploration.addResult(a,res,c);
 		static if(!is(putResult==Void)){
 			putResult(Assignment(terms, chain(
 						chain(ints1,ints2).map!Value,
 						chain(bools1,bools2).map!Value,
-						res[].filter!(a=>a.type!=Type.none_)).array),c);
+						res[].filter!(a=>a.type!=Type.none_)).array),c,t);
 		}
 	}
 	void randomExploration(int max){
@@ -561,11 +561,11 @@ auto runExploration(T, string m1, string m2, alias putResult=Void)(int numSample
 			try c=doCommute!(m1,m2)(t,a,res); catch{ --i; continue; }
   			auto nr=exploration.count();
 			scope(success) if(exploration.count()==nr) numInactive++; else numInactive=0;
-			addResult(a,res[0],c);
-			if(!c) addResult(a,res[1],c);
+			addResult(a,res[0],c,t);
+			if(!c) addResult(a,res[1],c,t);
 			// if(nr!=exploration.count()) writeln("found result using ",t);
 			version(VERBOSE) if(!(i%10000)) writeln("iteration #",i,"\t #results found: ",exploration.count());
-			maxNumInactive=1000*exploration.count();
+			//maxNumInactive=1000*exploration.count();
 		}
 	}
 	void boundedExhaustiveExploration(int intLowerBound,int intUpperBound,size_t numOps){
@@ -581,8 +581,8 @@ auto runExploration(T, string m1, string m2, alias putResult=Void)(int numSample
 					Value[2][2] res;
 					bool c;
 					try c=doCommute!(m1,m2)(t,a,res); catch return;
-					addResult(a,res[0],c);
-					if(!c) addResult(a,res[1],c);
+					addResult(a,res[0],c,t);
+					if(!c) addResult(a,res[1],c,t);
 					t=tbefore;
 				}else if(argPos>=a[0].ints.length+a[1].ints.length){
 					auto boolPos=argPos-a[0].ints.length-a[1].ints.length;

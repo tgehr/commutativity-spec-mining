@@ -69,6 +69,10 @@ struct either(string parameter,samplers...){ // TODO: constrain?
 @annotation 
 struct bounded(string parameter,string lower, string upper){
 	sampler!(parameter,"construct!(typeof("~parameter~"))("~lower~","~upper~")",lower~"<"~upper) theSampler;
+	auto exhaustive(T)(ref T t){
+		import std.range;
+		with(t) return iota(mixin(lower),mixin(upper));
+	}
 	alias theSampler this;
 }
 

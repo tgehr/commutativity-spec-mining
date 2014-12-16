@@ -3,13 +3,10 @@ import mine, formula;
 import hashtable;
 
 
-auto inferOccamSpec(T, string m1, string m2)(int numSamples=5000){
-	ResultStore s;
-	void addOccamResult(Assignment a,bool c){
-		s.addResult(a,c);
-	}
+private auto inferOccamSpecCommon(alias s,alias addOccamResult,T,string m1,string m2)(int numSamples){
 	runExploration!(T,m1,m2,addOccamResult)(numSamples);
 	s=s.maybeToNo();
+	version(VERBOSE) writeln("inferring formula...");
 	auto bp=extractRelevantBasicPredicates!(incompat,true)(s).array;
 	version(VERY_VERBOSE) writeln(bp,"\n",s);
 	//writeln(bp.length," ",bp);
@@ -18,6 +15,75 @@ auto inferOccamSpec(T, string m1, string m2)(int numSamples=5000){
 	//auto f=minimalEquivalentTo(s,bp);
 	//auto f=monteCarloMarkovChainEquivalentTo(s,bp);
 	if(!f) f=s.getFormula();
+	return f;
+}
+
+auto inferOccamSpec(T, string m1, string m2)(int numSamples=5000){
+	ResultStore s;
+	void addOccamResult(Assignment a,bool c,ref T t){
+		s.addResult(a,c);
+	}
+	return inferOccamSpecCommon!(s,addOccamResult,T,m1,m2)(numSamples);
+}
+
+//version=VERBOSE;
+//version=VERY_VERBOSE;
+auto inferExistentialOccamSpec(T, string m1, string m2, methods...)(int numSamples=5000){
+	ResultStore s;
+	Terminal[] eterms;
+	Terminal[] qterms;
+	import std.traits,std.conv;
+	import util,annotations;
+	foreach(i,m;methods){
+		alias method=ID!(mixin("T."~m));
+		static assert(!is(ReturnType!method==void));
+		alias argNames=ParameterIdentifierTuple!method;
+		enum suffix=(delegate string(int i)=>
+					 (i>10?__traits(parent,{})(i/10):"")
+					 ~ text("₀₁₂₃₄₅₆₇₈₉"d[(i+3)%10]))(i);
+		Terminal[] ceterms;
+		foreach(arg;argNames){
+			alias sampler=obtainSamplerFor!(method,arg);
+			static assert(is(typeof({T t;sampler().exhaustive(t);})),"cannot enumerate parameter: "~arg);
+			ceterms~=t(arg~suffix);
+		}
+		eterms~=ceterms;
+		qterms~=ceterms;
+		eterms~=t(m~"("~ceterms.map!(to!string).join(",")~")");
+	}
+	auto values=new Value[](eterms.length);
+	void addOccamResult(Assignment a,bool c,ref T t){
+		void go(int i,int j,int cur)(){
+			static if(i>=methods.length){
+				auto b=a.extend(Assignment(eterms,values));
+				s.addResult(b,c);
+			}else{
+				alias method=ID!(mixin("T."~methods[i]));
+				alias argNames=ParameterIdentifierTuple!method;
+				static if(j==argNames.length){
+					ParameterTypeTuple!method args;
+					//args[0]=values[cur-1].int_; // TODO: fix this.
+					foreach(i,ref arg;args){
+						arg=values[cur-args.length+i].get!(typeof(arg))();
+					}
+					values[cur]=Value(mixin("t."~methods[i])(args));
+					go!(i+1,0,cur+1);
+				}else{
+					alias arg=argNames[j];
+					alias sampler=obtainSamplerFor!(method,arg);
+					foreach(v;sampler().exhaustive(t).map!Value){
+						values[cur]=v;
+						go!(i,j+1,cur+1);
+					}
+				}
+			}
+		}
+		go!(0,0,0);
+	}
+	auto f=inferOccamSpecCommon!(s,addOccamResult,T,m1,m2)(numSamples);	
+	foreach_reverse(q;qterms){
+		f=new Exists(q,f);
+	}
 	return f;
 }
 

@@ -29,6 +29,7 @@ auto tuplex(T...)(T t){ return TupleX!T(t); }
 
 enum Precedence{
 	none,
+	quantifier,
 	equivalence,
 	implication,
 	xor,
@@ -250,6 +251,18 @@ class Lt: AtomicOp{
 	}
 }
 mixin(makeConstructorNonCommutAssocIdem!Lt);
+
+class Exists: Formula{
+	Terminal t;
+	Formula f;
+	
+	this(Terminal t,Formula f){ this.t=t; this.f=f; }
+	override @property Precedence precedence(){ return Precedence.quantifier; }
+	override string toStringImpl(Precedence prec){
+		return addp(prec,"∃ "~t.toString()~": "~f.toStringImpl(precedence));
+	}
+}
+
 
 void visit(T)(ref T result,Formula f){
 	alias Seq!(__traits(getOverloads,T,"perform")) overloads;
@@ -891,6 +904,8 @@ struct Value{
 	int int_()in{assert(type==Type.int_);}body{ return r; }
 	bool bool_()in{assert(type==Type.bool_);}body{ return !!r; }
 
+	T get(T)(){ static if(is(T==int)) return int_; static if(is(T==bool)) return bool_; }
+
 	string toString(){ return tt==Type.bool_?(!!r).to!string:tt==Type.int_?r.to!string:"()"; }
 	int opCmp(Value b){ return type==b.type?(r==b.r?0:r<b.r?-1:1):type==Type.int_?-1:1; }
 private:
@@ -899,9 +914,12 @@ private:
 }
 
 struct Assignment{
+	this(Terminal[] variables, Value[] values)in{assert(variables.length==values.length);}body{
+		this.variables=variables, this.values=values;
+	}
 	Value opIndex(Terminal variable){
 		foreach(i,v;variables) if(v is variable) return values[i];
-		assert(0,"range error");
+		assert(0,text("range error: have ",variables," looked for ",variable));
 	}
 	int opApply(scope int delegate(Terminal,ref Value) dg){
 		foreach(i,v;variables) if(auto r=dg(v,values[i])) return r;
@@ -931,6 +949,10 @@ struct Assignment{
 		auto r=Assignment(variables,values.dup);
 		foreach(i,ref x;r.values) if(variables[i] is t) x=v;
 		return r;
+	}
+
+	Assignment extend(Assignment b){
+		return Assignment(variables~b.variables,values~b.values);
 	}
 
 	Assignment increase(Terminal t){

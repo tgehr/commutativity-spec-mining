@@ -152,8 +152,18 @@ void main(){
 	/+import experiments;
 	runExperiments();+/
 
-	printSpecs!VoidTest;
+	//printSpecs!VoidTest;
+	/+writeln(inferExistentialOccamSpec!(ExistentialTest,"add2until","squareFrom","get")(60000));
+	// writeln(inferExistentialOccamSpec!(ArrayList!int,"add_at","indexOf","get")(600000));
+	//printSpecs!(MultiSetTest!int);
+	writeln(inferExistentialOccamSpec!(MultiSetTest!int,"add","remove","contains")(600000));
 	
+	static existentialInferenceMethod(T,string m1,string m2)(int numSamples){
+		return inferExistentialOccamSpec!(T,m1,m2,"contains");
+	}
+
+	printSpecs!(SetTest!int,existentialInferenceMethod);+/
+
 	// captured precisely in the fragment:
 	printSpecs!(Set!int);
 	printSpecs!(Map!(int,int));
@@ -172,7 +182,7 @@ void main(){
 	printSpecs!(UnionFind!"min")(more);
 	printSpecs!(UnionFind!"deterministic")(more);
 	printSpecs!(ArrayList!int)(600000);
-	//writeln(inferOccamSpec!(ArrayList!int,"indexOf","set")(30000));
+	//writeln(inferOccamSpec!(ArrayList!int,"indexOf","set")(30000));+/
  
 	
 	/+//(r₁ < v₁∨ v₂ ≤ r₁)∧ r₁ = r₂∧ (v₁ ≤ v₂∨ v₂ ≤ r₁)
