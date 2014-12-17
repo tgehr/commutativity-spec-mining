@@ -223,8 +223,7 @@ Spec[] loadSpecs(string filename){
 	return parseSpecs(readText(filename));
 }+/
 
-void measureSpecs(T,alias inferenceMethod=inferTimedOccamSpec)(int numSamples=5000){
-	version(VERBOSE) writeln(T.stringof);
+void forallMethodPairs(T,alias action,A...)(A args){
 	alias m=Seq!(__traits(allMembers,T));
 	bool dontConsider(string s){
 		return s=="toString"||s=="clone"||s=="opEquals";
@@ -234,23 +233,32 @@ void measureSpecs(T,alias inferenceMethod=inferTimedOccamSpec)(int numSamples=50
 			static if(!(j<i||dontConsider(m[i])||dontConsider(m[j]))){
 				alias m1a=ID!(mixin("T."~m[i]));
 				alias m2a=ID!(mixin("T."~m[j]));
-				static if(isCallable!m1a&&isCallable!m2a){
-					alias i1=Seq!(ParameterIdentifierTuple!m1a);
-					alias i2=Seq!(ParameterIdentifierTuple!m2a);
-					auto t1=(cast(string[])[i1]).map!(a=>(a~"₁")).array;
-					auto t2=(cast(string[])[i2]).map!(a=>(a~"₂")).array;
-					version(VERBOSE){
-						write("φ(",m[i],"(",t1.join(","),")/r₁, ",m[j],"(",t2.join(","),")/r₂): ");
-						stdout.flush();
-					}
-					auto stats=inferenceMethod!(T,m[i],m[j])(numSamples);
-					//writeln("φ(",m[i],"(",t1.join(","),")/r₁, ",m[j],"(",t2.join(","),")/r₂): ",stats);
-					version(VERBOSE) writeln(stats);
-					specs~=Spec(T.stringof,m[i],m[j],stats);
-				}
+				static if(isCallable!m1a&&isCallable!m2a)
+					action!(m[i],m[j])(args);
 			}
 		}
+	}	
+}
+
+void measureSpecs(T,alias inferenceMethod=inferTimedOccamSpec)(int numSamples=5000){
+	version(VERBOSE) writeln(T.stringof);
+	static void action(string m1,string m2)(int numSamples){ // workaround for buggy DMD
+		alias m1a=ID!(mixin("T."~m1));
+		alias m2a=ID!(mixin("T."~m2));
+		alias i1=Seq!(ParameterIdentifierTuple!m1a);
+		alias i2=Seq!(ParameterIdentifierTuple!m2a);
+		auto t1=(cast(string[])[i1]).map!(a=>(a~"₁")).array;
+		auto t2=(cast(string[])[i2]).map!(a=>(a~"₂")).array;
+		version(VERBOSE){
+			write("φ(",m1,"(",t1.join(","),")/r₁, ",m2,"(",t2.join(","),")/r₂): ");
+			stdout.flush();
+		}
+		auto stats=inferenceMethod!(T,m1,m2)(numSamples);
+		//writeln("φ(",m[i],"(",t1.join(","),")/r₁, ",m[j],"(",t2.join(","),")/r₂): ",stats);
+		version(VERBOSE) writeln(stats);
+		specs~=Spec(T.stringof,m1,m2,stats);
 	}
+	forallMethodPairs!(T,action)(numSamples);
 }
 
 string prettyDataType(string dataType){
@@ -441,6 +449,26 @@ string createAverageTable(Spec[][] allSpecs){
 	return s;
 }
 
+void performMeasurements(alias measure)(){
+	measure!(Set!int);
+	measure!(Map!(int,int));
+	measure!(MaxRegister!int);
+	measure!RangeUpdate;
+	measure!(KDTree!int); // "1DTree"
+	// not captured precisely in the fragment
+	enum many=30000;
+	enum more=50000;
+	measure!Accumulator;
+	measure!(MultiSet!int);
+	measure!(UnionFind!("default",false))(many);
+	measure!(UnionFind!("min",false))(many);
+	measure!(UnionFind!("deterministic",false))(more);
+	measure!(UnionFind!"default")(many);
+	measure!(UnionFind!"min")(more);
+	measure!(UnionFind!"deterministic")(more);
+	measure!(ArrayList!int)(600000);	
+}
+
 void runExperiments()(){
 	import std.stdio;
 	//writeln(runWithTimeout!({ writeln("finished"); return 0; })(1));
@@ -449,23 +477,7 @@ void runExperiments()(){
 	Spec[][] allSpecs;
 	foreach(i;0..12){
 		specs=[];
-		measureSpecs!(Set!int);
-		measureSpecs!(Map!(int,int));
-		measureSpecs!(MaxRegister!int);
-		measureSpecs!RangeUpdate;
-		measureSpecs!(KDTree!int); // "1DTree"
-		// not captured precisely in the fragment
-		enum many=30000;
-		enum more=50000;
-		measureSpecs!Accumulator;
-		measureSpecs!(MultiSet!int);
-		measureSpecs!(UnionFind!("default",false))(many);
-		measureSpecs!(UnionFind!("min",false))(many);
-		measureSpecs!(UnionFind!("deterministic",false))(more);
-		measureSpecs!(UnionFind!"default")(many);
-		measureSpecs!(UnionFind!"min")(more);
-		measureSpecs!(UnionFind!"deterministic")(more);
-		measureSpecs!(ArrayList!int)(600000);
+		performMeasurements!measureSpecs();
 		auto tables=createTables(specs);
 		writeln("run ",i,":");
 		writeln("detailed:");
@@ -479,5 +491,108 @@ void runExperiments()(){
 	writeln("average:");
 	writeln(createAverageTable(allSpecs));
 }
+
+void countTypes(T, string m1, string m2)(int numSamples=5000, int searchTimeout=searchTimeout){
+	SpecStats stats;
+	ResultStore s;
+	int actualNumSamples=0;
+	MapX!(EquivAssignment,size_t) counts;
+	static struct DiscoveryTime{
+		size_t withinClass;
+		size_t overall;
+	}
+	MapX!(EquivAssignment,DiscoveryTime) ambigs;
+	Formula[] formulas;
+	enum formulaStep=10;
+	writeln(T.stringof," ",m1," ",m2);
+	void addOccamResult(Assignment a,bool c,ref T t){
+		auto ea=EquivAssignment(a);
+		actualNumSamples++;
+		counts[ea]+=1;
+		Quat status=s.map.get(ea,Quat.dunno);
+		if(!c&&status==Quat.yes){
+			//writeln("found harmfully ambiguous type after ",counts[ea]," ",actualNumSamples);
+			ambigs[ea]=DiscoveryTime(counts[ea],actualNumSamples);
+		}
+		s.addResult(a,c);
+		if(!((actualNumSamples-1)%(formulaStep*(formulas.length&&formulas[$-1] is null?100:1)))){
+			auto dups=s.maybeToNo();
+			auto bp=extractRelevantBasicPredicates!(incompat,true)(dups).array;
+			auto f=greedyEquivalentTo(dups,bp);
+			formulas~=f;
+			if(formulas.length>1&&formulas[$-1] !is formulas[$-2]){
+				writeln(actualNumSamples," → ",formulas[$-1]);
+			}
+		}
+	}
+	runExploration!(T,m1,m2,addOccamResult)(numSamples);
+	//s=s.maybeToNo();
+	{
+		writeln("all types: ");
+		writeln("\tnumber / total: ",counts.length," / ",computeNumClasses(cast(int)s.terms(Type.int_).length)*cast(int)(2^^(s.terms(Type.bool_).length)));
+		size_t minimum=size_t.max,maximum,sum;
+		foreach(ea,c;counts){
+			minimum=min(minimum,c);
+			maximum=max(maximum,c);
+			sum+=c;
+		}
+		size_t average=sum/counts.length;
+		writeln("\tnumber of samples per type:");
+		writeln("\t\tmin: ",minimum);
+		writeln("\t\tmax: ",maximum);
+		writeln("\t\tavg: ",average);
+		writeln("\t\ttotal: ",actualNumSamples);
+	}
+	if(ambigs.length){
+		writeln("harmfully ambiguous types: ");
+		writeln("\tnumber / explored: ",ambigs.length," / ",counts.length);
+		writeln("\tdiscovery time:");
+		writeln("\toverall:");
+		{
+			size_t minimum=size_t.max,maximum,sum;
+			foreach(ea,c;ambigs){
+				minimum=min(minimum,c.overall);
+				maximum=max(maximum,c.overall);
+				sum+=c.overall;
+			}
+			size_t average=sum/ambigs.length;
+			writeln("\t\tmin: ",minimum);
+			writeln("\t\tmax: ",maximum);
+			writeln("\t\tavg: ",average);
+		}
+		writeln("\twithin type:");
+		{
+			size_t minimum=size_t.max,maximum,sum;
+			foreach(ea,c;ambigs){
+				minimum=min(minimum,c.withinClass);
+				maximum=max(maximum,c.withinClass);
+				sum+=c.withinClass;
+			}
+			size_t average=sum/ambigs.length;
+			writeln("\t\tmin: ",minimum);
+			writeln("\t\tmax: ",maximum);
+			writeln("\t\tavg: ",average);
+		}
+	}
+	//writeln(counts);
+}
+
+/+File f;
+void writeln(T...)(T args){ // wtf? why doesn't tee work?
+	f.writeln(args);
+	std.stdio.writeln(args);
+	f.flush();
+}
+
+void runTypeCounting(){
+	f=File("robustness_tests.txt","w");
+	static void countAllTypes(T,alias inferenceMethod=inferTimedOccamSpec)(int numSamples=5000){
+		static void action(string m1,string m2)(int numSamples){
+			countTypes!(T,m1,m2)(numSamples);
+		}
+		forallMethodPairs!(T,action)(numSamples);
+	}
+	performMeasurements!countAllTypes();
+}+/
 
 version=VERBOSE;

@@ -164,8 +164,12 @@ void main(){
 
 	printSpecs!(SetTest!int,existentialInferenceMethod);+/
 
+	import experiments;
+	//runExperiments();
+	performMeasurements!printSpecs;
+	//runTypeCounting();
 	// captured precisely in the fragment:
-	printSpecs!(Set!int);
+	/+printSpecs!(Set!int);
 	printSpecs!(Map!(int,int));
 	printSpecs!(MultiSet!int);
 	printSpecs!(MaxRegister!int);
