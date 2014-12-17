@@ -469,6 +469,27 @@ void performMeasurements(alias measure)(){
 	measure!(ArrayList!int)(600000);	
 }
 
+void performMeasurements10x(alias measure)(){
+	measure!(Set!int)(50000);
+	measure!(Map!(int,int))(50000);
+	measure!(MaxRegister!int)(50000);
+	measure!RangeUpdate(50000);
+	measure!(KDTree!int)(50000); // "1DTree"
+	// not captured precisely in the fragment
+	enum many=300000;
+	enum more=500000;
+	measure!Accumulator;
+	measure!(MultiSet!int);
+	measure!(UnionFind!("default",false))(many);
+	measure!(UnionFind!("min",false))(many);
+	measure!(UnionFind!("deterministic",false))(more);
+	measure!(UnionFind!"default")(many);
+	measure!(UnionFind!"min")(more);
+	measure!(UnionFind!"deterministic")(more);
+	measure!(ArrayList!int)(6000000);
+}
+
+
 void runExperiments()(){
 	import std.stdio;
 	//writeln(runWithTimeout!({ writeln("finished"); return 0; })(1));

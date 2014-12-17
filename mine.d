@@ -538,8 +538,8 @@ auto runExploration(T, string m1, string m2, alias putResult=Void)(int numSample
 	void randomExploration(int max){
 		T t;
 		auto maxNumInactive=long.max;
-		int numInactive=0;
-		for(int i=0;(i<50000||i<exploration.count()*50000)&&i<max&&numInactive<maxNumInactive;i++){
+		int numInactive=0,i=0;
+		for(;(i<50000||i<exploration.count()*50000)&&i<max&&numInactive<maxNumInactive;i++){
 			if(!uniform(0,10)) t=T.init;
 			foreach(_;0..uniform(0,10)) modify(t);
 			bool foundAll=false;
@@ -565,7 +565,11 @@ auto runExploration(T, string m1, string m2, alias putResult=Void)(int numSample
 			if(!c) addResult(a,res[1],c,t);
 			// if(nr!=exploration.count()) writeln("found result using ",t);
 			version(VERBOSE) if(!(i%10000)) writeln("iteration #",i,"\t #results found: ",exploration.count());
-			//maxNumInactive=1000*exploration.count();
+			maxNumInactive=1000*exploration.count();
+		}
+		version(VERBOSE_BOUNDS){
+			assert(i>=max||numInactive>=maxNumInactive);
+			writeln("hit bound of ",i>=max?"samples":"inactivity");
 		}
 	}
 	void boundedExhaustiveExploration(int intLowerBound,int intUpperBound,size_t numOps){
