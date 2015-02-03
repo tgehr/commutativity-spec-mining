@@ -20,10 +20,18 @@ private auto inferOccamSpecCommon(alias s,alias addOccamResult,T,string m1,strin
 
 auto inferOccamSpec(T, string m1, string m2)(int numSamples=5000){
 	ResultStore s;
+	bool[] isNew;
 	void addOccamResult(Assignment a,bool c,ref T t){
+		isNew~=EquivAssignment(a) !in s.map;
 		s.addResult(a,c);
 	}
-	return inferOccamSpecCommon!(s,addOccamResult,T,m1,m2)(numSamples);
+	auto r=inferOccamSpecCommon!(s,addOccamResult,T,m1,m2)(numSamples);
+	/*size_t window=min(1000,isNew.length);
+	double rate=0;
+	foreach(x;isNew[$-window..$]) rate+=x;
+	rate/=window;
+	writeln("rate of new logical types at end: ",rate);*/
+	return r;
 }
 
 //version=VERBOSE;
