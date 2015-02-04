@@ -183,12 +183,11 @@ private:
 			if(ci==ints.length && !bools.length)
 				return super.randomlyFind(ci,split,p,ints,bools);
 			assert(split.length);
-			assert(!full); // TODO: precondition
 			switch(split[0]){
 			case Type.int_:
-				auto l=uniform(0,next.filter!(a=>!a||!a.full).walkLength());
+				auto l=uniform(0,next.filter!(a=>!a||!a.full||full).walkLength());
 				foreach(i,ref n;next){
-					if(n&&n.full||l--) continue;
+					if(n&&n.full&&!full||l--) continue;
 					version(VERY_VERY_VERBOSE) writeln("adding ",ci," at ",i);
 					p.addAt(cast(int)ci,i);
 					version(VERY_VERY_VERBOSE) writeln(p);
