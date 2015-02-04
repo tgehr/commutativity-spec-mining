@@ -505,7 +505,10 @@ struct MinHeap{
 import std.typecons : q=tuple, Q=Tuple;
 struct LexicographicProximityQuery{
 	Q!(int,int)[] elems;
-	void insert(int a,int b){ elems~=q(a,b); }
+	void insert(int a,int b){
+		foreach(x;elems) if(x==q(a,b)) return;
+		elems~=q(a,b);
+	}
 	void remove(int a,int b){
 		auto x=q(a,b);
 		foreach(i,ref e;elems){
@@ -513,6 +516,7 @@ struct LexicographicProximityQuery{
 			swap(e,elems[$-1]);
 			elems=elems[0..$-1];
 			elems.assumeSafeAppend();
+			break;
 		}
 	}
 	Q!(int,int) nextLarger(int a,int b){
