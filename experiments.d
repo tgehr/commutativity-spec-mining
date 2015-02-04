@@ -69,6 +69,7 @@ auto inferTimedOccamSpec(T, string m1, string m2)(int numSamples=0, int searchTi
 	stats.totNumClasses=computeNumClasses(cast(int)s.terms(Type.int_).length)*cast(int)(2^^(s.terms(Type.bool_).length));
 	version(VERY_VERBOSE) writeln(bp,"\n",s);
 	//writeln(bp.length," ",bp);
+	// TODO: implement timeouts in a better way!
 	enum tooLargeForExhaustive = [
 		is(T==Map!(int,int)) && m1=="put" && m2=="put" ||
 		is(T==RangeUpdate) && m1=="add2" && m2=="square" ||
@@ -478,18 +479,27 @@ void performMeasurements(alias measure)(){
 	measure!(Set!int);
 	measure!(Map!(int,int));
 	measure!(MaxRegister!int);
-	measure!RangeUpdate;
+	measure!RangeUpdate; // maybe imprecise. TODO: figure this out
 	measure!(KDTree!int); // "1DTree"
 	// not captured precisely in the fragment
+	measure!(IntProximityQuery); // maybe precise. TODO: figure this out
 	measure!Accumulator;
+	measure!IntCell;
+	/+measure!Queue; // TODO: exceptions are slow, do this some other way?
+	measure!Stack; // TODO: ditto
+	measure!MinHeap; // TODO: ditto+/
+	// measure!LexicographicProximityQuery; // TODO: multiple return values!
 	measure!(MultiSet!int);
+	measure!(PartialMap); // TODO: why is put/size spec wrong consistently?
 	measure!(UnionFind!("default",false))();
 	measure!(UnionFind!("min",false))();
 	measure!(UnionFind!("deterministic",false))();
 	measure!(UnionFind!"default")();
 	measure!(UnionFind!"min")();
 	measure!(UnionFind!"deterministic")();
+	measure!BitTextEditor;
 	measure!(ArrayList!int)();
+	measure!BitList;
 }
 
 void runExperiments()(){

@@ -390,3 +390,225 @@ struct UndefRegister{
 	}
 }
 +/
+
+import std.algorithm;
+struct IntProximityQuery{
+	int[] elems;
+	void insert(int x){ elems~=x; }
+	void remove(int x){
+		foreach(i,ref e;elems){
+			if(x!=e) continue;
+			swap(e,elems[$-1]);
+			elems=elems[0..$-1];
+			elems.assumeSafeAppend();
+		}
+	}
+	int nextLarger(int x){
+		int m=x;
+		foreach(e;elems) if(e>x&&(m==x||m>e)) m=e;
+		return m;
+	}
+	int nextSmaller(int x){
+		int m=x;
+		foreach(e;elems) if(e<x&&(m==x||m<e)) m=e;
+		return m;
+	}
+
+	bool opEquals(IntProximityQuery rhs){
+		return sort(elems)==sort(rhs.elems);
+	}
+	IntProximityQuery clone(){ return IntProximityQuery(elems.dup); }
+}
+
+// inspired by Trek Palmer's dissertation: ////////
+
+struct IntCell{
+	int v;
+	int get(){ return v; }
+	int put(int x){ auto o=v;v=x;return o; }
+	void set(int x){ v=x; }
+	int putOne(){ return put(1); }
+	int putTwo(){ return put(2); }
+	void setOne(){ set(1); }
+	void setTwo(){ set(2); }
+	IntCell clone(){ return this; }
+}
+
+struct PartialMap{
+	Set!int dom;
+	Map!(int,int) map;
+
+	int put(int k,int v){ dom.add(k); return map.put(k,v); }
+	@sampleFrom!("k","dom.elems.keys")
+	//@precondition!("k","dom.contains(k)")
+	int get(int k){ if(!dom.contains(k)) throw new Exception("Out of range"); return map.get(k); }
+	bool containsKey(int k){ return dom.contains(k); }
+	void remove(int k){ dom.remove(k); map.elems.remove(k); }
+
+	auto clone(){ return PartialMap(dom.clone(),map.clone()); }
+	bool opEquals(PartialMap r){
+		if(dom!=r.dom) return false;
+		foreach(k,_;dom.elems)
+			if(map.get(k)!=r.map.get(k))
+				return false;
+		return true;
+	}
+	int size(){ return dom.size(); }
+}
+
+import std.range;
+////////////////////////////////////////////////////
+
+struct Queue{
+	int[] a;
+	int s=0,e=0;
+	int size(){ return e-s; }
+	void push(int x){
+		if(!a.length) a=[0,0];
+		if(e%a.length==s%a.length){
+			auto b=iota(s,e).map!(i=>a[i%a.length]).array;
+			b.length=2*a.length;
+			a=b,e=e-s,s=0;
+		}
+		a[e++%a.length]=x;
+	}
+	int front(){ if(!size()) throw new Exception("No elements."); return a[s%a.length]; }
+	void pop(){ if(!size()) throw new Exception("No elements."); s++; }
+
+	Queue clone(){ return Queue(a.dup,s,e); }
+	bool opEquals(Queue r){
+		return equal(iota(s,e).map!(i=>a[i%a.length]),
+					 iota(r.s,r.e).map!(i=>r.a[i%r.a.length]));
+	}
+}
+
+struct Stack{
+	int[] a;
+	int size(){ return cast(int)a.length; }
+	void push(int x){ a~=x; }
+	int top(){ if(!size()) throw new Exception("No elements."); return a[$-1]; }
+	void pop(){ if(!size()) throw new Exception("No elements."); a=a[0..$-1], a.assumeSafeAppend(); }
+
+	Stack clone(){ return Stack(a.dup); }
+}
+
+struct MinHeap{
+	int[] a;
+	int size(){ return cast(int)a.length; }
+	void push(int x){ a~=x; sort!"a>b"(a); }
+	int top(){ if(!size()) throw new Exception("No elements."); return a[$-1]; }
+	void pop(){ if(!size()) throw new Exception("No elements."); a=a[0..$-1], a.assumeSafeAppend(); }
+
+	MinHeap clone(){ return MinHeap(a.dup); }
+}
+
+import std.typecons : q=tuple, Q=Tuple;
+struct LexicographicProximityQuery{
+	Q!(int,int)[] elems;
+	void insert(int a,int b){ elems~=q(a,b); }
+	void remove(int a,int b){
+		auto x=q(a,b);
+		foreach(i,ref e;elems){
+			if(x!=e) continue;
+			swap(e,elems[$-1]);
+			elems=elems[0..$-1];
+			elems.assumeSafeAppend();
+		}
+	}
+	Q!(int,int) nextLarger(int a,int b){
+		auto x=q(a,b), m=x;
+		foreach(e;elems) if(e>x&&(m==x||m>e)) m=e;
+		return m;
+	}
+	Q!(int,int) nextSmaller(int a,int b){
+		auto x=q(a,b), m=x;
+		foreach(e;elems) if(e<x&&(m==x||m<e)) m=e;
+		return m;
+	}
+
+	bool opEquals(LexicographicProximityQuery rhs){
+		return sort(elems)==sort(rhs.elems);
+	}
+	auto clone(){ return LexicographicProximityQuery(elems.dup); }
+}
+
+struct BitList{
+	bool[] a;
+	@bounded!("i","0","cast(int)a.length")
+	bool set(int i,bool x){ auto o=a[i]; a[i]=x; return o; }
+	@bounded!("i","0","cast(int)a.length")
+	bool get(int i){ return a[i]; }
+	int size(){ return cast(int)a.length; }
+	@bounded!("x","0","cast(int)a.length+10")
+	void resize(int x){ a.length=x; }
+	@bounded!("i","0","cast(int)a.length+1")
+	void insert(int i,bool x){
+		a.length++;
+		foreach_reverse(k;i..a.length)
+			a[k]=a[k-1];
+		a[i]=x;
+	}
+	@bounded!("i","0","cast(int)a.length")
+	void remove(int i){
+		foreach(k;i..a.length-1)
+			a[i]=a[i+1];
+		a.length--;
+	}
+	int findFirst(bool x){ foreach(i,b;a) if(b==x) return cast(int)i; return -1; }
+	int findLast(bool x){ foreach_reverse(i,b;a) if(b==x) return cast(int)i; return -1; }
+	void toggleFirst(bool x){ auto i=findFirst(x); if(~i) a[i]=!a[i]; }
+	int findClosest(int i,bool x){
+		foreach(k;0..max(i+1,a.length-i)){
+			if(i>=k&&a[i-k]==x) return cast(int)(i-k);
+			if(i+k<a.length&&a[i+k]==x) return cast(int)(i+k);
+		}
+		return -1;
+	}
+	void toggleClosest(int i,bool x){ auto j=findClosest(i,x); if(~j) a[j]=!a[j]; }
+	void sort(){ .sort(a); }
+	@bounded!("s","0","cast(int)a.length")
+	@bounded!("e","0","cast(int)a.length+1")
+	void invertBlock(int s,int e){
+		foreach(i;s..e) a[i]=!a[i];
+	}
+	@bounded!("s","0","cast(int)a.length")
+	@bounded!("e","0","cast(int)a.length+1")
+	void reverseBlock(int s,int e){
+		foreach(i;s..(e+s)/2) swap(a[i],a[e-1+s-i]);
+	}
+	@bounded!("s","0","cast(int)a.length")
+	@bounded!("e","0","cast(int)a.length+1")
+	void shiftBlock(int s,int e){
+		foreach(i;s..e) swap(a[i],a[(i-s+1)%(e-s)+s]);
+	}
+	auto clone(){ return BitList(a.dup); }
+}
+
+struct BitTextEditor{
+	bool[] text;
+	int cursor=0;
+	int position(){ return cursor; }
+	int length(){ return cast(int)text.length; }
+	bool read(){ while(cursor>=text.length) text~=false; return text[cursor]; }
+	void insert(bool b){
+		text~=b;
+		foreach_reverse(i;cursor..text.length-1)
+			swap(text[i],text[i+1]);
+		cursor++;
+	}
+	void delRight(){
+		moveRight(), delete_();
+	}
+	void delete_(){
+		cursor--;
+		if(cursor<0){ cursor=0; return; }
+		foreach(i;cursor..text.length-1)
+			swap(text[i],text[i+1]);
+		text=text[0..$-1];
+		text.assumeSafeAppend();
+	}
+	void moveLeft(){ cursor=max(0,cursor-1); }
+	void moveRight(){ cursor++; while(cursor>=text.length) text~=false; }
+
+	auto clone(){ return BitTextEditor(text.dup,cursor); }
+}
