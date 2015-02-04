@@ -26,6 +26,7 @@ auto obtainTimedSpec(alias dg, bool isATimeout=false)(int searchTimeout){
 	//static if(isATimeout){ spec.timedOut=true; return spec; }
 	auto sw=StopWatch(AutoStart.yes);
 	spec.formula=dg(cast(TickDuration)searchTimeout.dur!"seconds");
+	if(spec.formula is null){ spec.timedOut=true; return spec; }
 	spec.time=sw.peek();
 	return spec;
 }

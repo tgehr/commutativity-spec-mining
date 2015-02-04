@@ -168,7 +168,11 @@ private:
 
 
 struct NonEquivalentMinimalFormulasOn(T...){
-	this(ResultStore st,size_t sizeLimit,Formula[] bp){
+	//TODO: elegance
+	StopWatch sw; TickDuration timeout;
+	this(ResultStore st,size_t sizeLimit,Formula[] bp,TickDuration timeout=TickDuration(0)){
+		this.timeout=timeout;
+		if(timeout!=TickDuration(0)) sw.start();
 		this.st=st; this.sizeLimit=sizeLimit;
 		foreach(index;0..2){
 			memo[index].length=2;
@@ -191,9 +195,11 @@ struct NonEquivalentMinimalFormulasOn(T...){
 						if(feq in outer.minSet) return false;
 						outer.minSet.insert(feq);
 						outer.hashesMap[f]=feq;
-						return true;})(s,outer.memo)){
+						return true;})(s,outer.memo,outer.timeout!=TickDuration(0)?outer.timeout-outer.sw.peek():TickDuration(0))){
 				if(g !in outer.hashesMap) outer.hashesMap[g]=EquivOnFormula(g,outer.st);
 				if(auto r=dg(outer.hashesMap[g])) return r;
+				if(outer.timeout!=TickDuration(0)&&outer.sw.peek()>outer.timeout)
+					return 1;
 			}
 			return 0;
 		}
@@ -214,7 +220,7 @@ Formula minimalEquivalentTo(ResultStore s,Formula[] bp,TickDuration timeout=Tick
 	bool to=timeout!=TickDuration(0);
 	StopWatch sw; if(to) sw.start();
 	auto fhash=equivClassHashOf(s);
-	foreach(EquivOnFormula g;NonEquivalentMinimalFormulasOn!()(s,100,bp)){
+	foreach(EquivOnFormula g;NonEquivalentMinimalFormulasOn!()(s,100,bp,to?timeout-sw.peek():TickDuration(0))){
 		version(VERY_VERBOSE){ import std.stdio; writeln("s: ",g.f.size()," considering formula ",g.f," ",g.toHash()); }
 		if(g.toHash()!=fhash) continue;
 		if(g.f.equivalentTo(s))
@@ -280,7 +286,7 @@ Formula greedyEquivalentTo(ResultStore s,Formula[] bp,TickDuration timeout=TickD
 		}
 		return null;
 	}
-	auto minformulas=NonEquivalentMinimalFormulasOn!And(s,100,bp);
+	auto minformulas=NonEquivalentMinimalFormulasOn!And(s,100,bp,to?timeout-sw.peek():TickDuration(0));
 	foreach(curSiz;0..100){
 		foreach(EquivOnFormula g;minformulas.iterateThroughSize(curSiz)){
 			if(!g.f.implies(s)) continue;

@@ -827,7 +827,10 @@ Formula[] allBasicPredicates(Tuple!(Terminal[],Terminal[]) variables,bool lt=tru
 }
 
 import std.array;
-Formula[] allFormulasOfSize(T,alias filter=_=>true)(size_t s,ref Formula[][][2] memo){
+import std.datetime;
+Formula[] allFormulasOfSize(T,alias filter=_=>true)(size_t s,ref Formula[][][2] memo,TickDuration timeout=TickDuration(0)){
+	bool to=timeout!=TickDuration(0);
+	StopWatch sw; if(to) sw.start();
 	enum index=is(T==And)?0:1;
 	if(memo[index].length<=s) memo[index].length=(s*2)+1;
 	if(memo[index][s].length||s==1) return memo[index][s];
@@ -842,6 +845,7 @@ Formula[] allFormulasOfSize(T,alias filter=_=>true)(size_t s,ref Formula[][][2] 
 	else static assert(0);
 
 	void create(size_t curSize,size_t totalSize,FormulaSet fs){
+		if(to&&sw.peek()>timeout){ memo[index][s]=[]; return; }
 		auto remainder=s-totalSize;
 		assert(remainder>=0);
 		if(!remainder){
@@ -883,9 +887,12 @@ Formula[] allFormulasOfSize(T,alias filter=_=>true)(size_t s,ref Formula[][][2] 
 	return memo[index][s];
 }
 
-auto allFormulasOfSize(alias filter=_=>true)(size_t s, ref Formula[][][2] memo){
-	return chain(allFormulasOfSize!(And,filter)(s,memo),
-				 s==1?[]:allFormulasOfSize!(Or,filter)(s,memo));
+auto allFormulasOfSize(alias filter=_=>true)(size_t s, ref Formula[][][2] memo,TickDuration timeout=TickDuration(0)){
+	auto to=timeout!=TickDuration(0);
+	StopWatch sw; if(to) sw.start();
+	auto a=allFormulasOfSize!(And,filter)(s,memo,timeout);
+	auto b=s==1?[]:allFormulasOfSize!(Or,filter)(s,memo,to?timeout-sw.peek():timeout);
+	return chain(a,b);
 }
 
 struct EquivFormula{
