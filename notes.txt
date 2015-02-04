@@ -1,3 +1,346 @@
+Set!int
+φ(contains(e₁)/r₁, contains(e₂)/r₂): true
+φ(contains(e₁)/r₁, add(e₂)/r₂): e₁ ≠ e₂∨ ¬ r₂
+φ(contains(e₁)/r₁, remove(e₂)/r₂): e₁ ≠ e₂∨ ¬ r₂
+φ(contains(e₁)/r₁, size()/r₂): true
+φ(add(e₁)/r₁, add(e₂)/r₂): e₁ ≠ e₂∨ ¬ r₁∧ ¬ r₂
+φ(add(e₁)/r₁, remove(e₂)/r₂): e₁ ≠ e₂
+φ(add(e₁)/r₁, size()/r₂): ¬ r₂
+φ(remove(e₁)/r₁, remove(e₂)/r₂): e₁ ≠ e₂∨ ¬ r₁∧ ¬ r₂
+φ(remove(e₁)/r₁, size()/r₂): ¬ r₂
+φ(size()/r₁, size()/r₂): true
+Map!(int, int)
+φ(get(key₁)/r₁, get(key₂)/r₂): true
+φ(get(key₁)/r₁, put(key₂,value₂)/r₂): key₁ ≠ key₂∨ r₂ = value₂
+φ(put(key₁,value₁)/r₁, put(key₂,value₂)/r₂): key₁ ≠ key₂∨ r₁ = value₁∧ r₂ = value₂
+MaxRegister!int
+φ(get()/r₁, get()/r₂): true
+φ(get()/r₁, set(v₂)/r₂): v₂ ≤ r₂
+φ(set(v₁)/r₁, set(v₂)/r₂): v₁ ≤ r₁∧ v₂ ≤ r₂
+RangeUpdate
+φ(add2(l₁,r₁)/r₁, add2(l₂,r₂)/r₂): true
+φ(add2(l₁,r₁)/r₁, square(l₂,r₂)/r₂): ¬ r₁∨ r₁ < l₁∨ r₁ < l₂∨ ¬ r₂∨ r₂ < l₁∨ r₂ < l₂
+φ(square(l₁,r₁)/r₁, square(l₂,r₂)/r₂): true
+KDTree!int
+φ(add(t₁)/r₁, add(t₂)/r₂): ¬ r₁∧ ¬ r₂∨ t₁ ≠ t₂
+φ(add(t₁)/r₁, remove(t₂)/r₂): t₁ ≠ t₂
+φ(add(t₁)/r₁, nearest(t₂)/r₂): r₁ < t₁∧ t₂ ≤ r₁∨ r₁ ≤ t₂∧ t₁ < r₁∨ ¬ r₂
+φ(remove(t₁)/r₁, remove(t₂)/r₂): ¬ r₁∧ ¬ r₂∨ t₁ ≠ t₂
+φ(remove(t₁)/r₁, nearest(t₂)/r₂): r₁ < t₁∧ t₂ ≤ r₁∨ r₁ ≤ t₂∧ t₁ < r₁∨ ¬ r₂
+φ(nearest(t₁)/r₁, nearest(t₂)/r₂): true
+IntProximityQuery
+φ(insert(x₁)/(), insert(x₂)/()): true
+φ(insert(x₁)/(), remove(x₂)/()): false
+φ(insert(x₁)/(), nextLarger(x₂)/r₂): r₂ < x₁∧ r₂ ≠ x₂∨ x₁ ≤ x₂
+φ(insert(x₁)/(), nextSmaller(x₂)/r₂): r₂ ≠ x₂∧ x₁ < r₂∨ x₂ ≤ x₁
+φ(remove(x₁)/(), remove(x₂)/()): x₁ = x₂
+φ(remove(x₁)/(), nextLarger(x₂)/r₂): r₂ < x₁∧ r₂ ≠ x₂
+φ(remove(x₁)/(), nextSmaller(x₂)/r₂): x₂ ≤ x₁
+φ(nextLarger(x₁)/r₁, nextLarger(x₂)/r₂): true
+φ(nextLarger(x₁)/r₁, nextSmaller(x₂)/r₂): true
+φ(nextSmaller(x₁)/r₁, nextSmaller(x₂)/r₂): true
+Accumulator
+φ(increase(v₁)/(), increase(v₂)/()): true
+φ(increase(v₁)/(), read()/r₂): false
+φ(read()/r₁, read()/r₂): true
+IntCell
+φ(get()/r₁, get()/r₂): true
+φ(get()/r₁, put(x₂)/r₂): r₂ = x₂
+φ(get()/r₁, set(x₂)/()): false
+φ(get()/r₁, putOne()/r₂): false
+φ(get()/r₁, putTwo()/r₂): false
+φ(get()/r₁, setOne()/()): false
+φ(get()/r₁, setTwo()/()): false
+φ(put(x₁)/r₁, put(x₂)/r₂): r₁ = r₂∧ x₁ = x₂
+φ(put(x₁)/r₁, set(x₂)/()): false
+φ(put(x₁)/r₁, putOne()/r₂): false
+φ(put(x₁)/r₁, putTwo()/r₂): false
+φ(put(x₁)/r₁, setOne()/()): false
+φ(put(x₁)/r₁, setTwo()/()): false
+φ(set(x₁)/(), set(x₂)/()): x₁ = x₂
+φ(set(x₁)/(), putOne()/r₂): false
+φ(set(x₁)/(), putTwo()/r₂): false
+φ(set(x₁)/(), setOne()/()): false
+φ(set(x₁)/(), setTwo()/()): false
+φ(putOne()/r₁, putOne()/r₂): r₁ = r₂
+φ(putOne()/r₁, putTwo()/r₂): false
+φ(putOne()/r₁, setOne()/()): false
+φ(putOne()/r₁, setTwo()/()): false
+φ(putTwo()/r₁, putTwo()/r₂): r₁ = r₂
+φ(putTwo()/r₁, setOne()/()): false
+φ(putTwo()/r₁, setTwo()/()): false
+φ(setOne()/(), setOne()/()): true
+φ(setOne()/(), setTwo()/()): false
+φ(setTwo()/(), setTwo()/()): true
+MultiSet!int
+φ(num(e₁)/r₁, num(e₂)/r₂): true
+φ(num(e₁)/r₁, add(e₂)/r₂): e₁ ≠ e₂
+φ(num(e₁)/r₁, remove(e₂)/r₂): e₁ ≠ e₂∨ ¬ r₂
+φ(num(e₁)/r₁, size()/r₂): true
+φ(add(e₁)/r₁, add(e₂)/r₂): e₁ ≠ e₂∨ ¬ r₁∧ ¬ r₂
+φ(add(e₁)/r₁, remove(e₂)/r₂): e₁ ≠ e₂
+φ(add(e₁)/r₁, size()/r₂): false
+φ(remove(e₁)/r₁, remove(e₂)/r₂): e₁ ≠ e₂∨ r₁∧ r₂∨ ¬ r₁∧ ¬ r₂
+φ(remove(e₁)/r₁, size()/r₂): ¬ r₂
+φ(size()/r₁, size()/r₂): true
+PartialMap
+φ(put(k₁,v₁)/r₁, put(k₂,v₂)/r₂): k₁ ≠ k₂∨ r₁ = r₂∧ v₁ = v₂
+φ(put(k₁,v₁)/r₁, get(k₂)/r₂): k₁ ≠ k₂
+φ(put(k₁,v₁)/r₁, containsKey(k₂)/r₂): k₁ ≠ k₂
+φ(put(k₁,v₁)/r₁, remove(k₂)/()): k₁ ≠ k₂
+φ(put(k₁,v₁)/r₁, size()/r₂): r₂ < r₁
+φ(get(k₁)/r₁, get(k₂)/r₂): true
+φ(get(k₁)/r₁, containsKey(k₂)/r₂): true
+φ(get(k₁)/r₁, remove(k₂)/()): true
+φ(get(k₁)/r₁, size()/r₂): true
+φ(containsKey(k₁)/r₁, containsKey(k₂)/r₂): true
+φ(containsKey(k₁)/r₁, remove(k₂)/()): k₁ ≠ k₂
+φ(containsKey(k₁)/r₁, size()/r₂): true
+φ(remove(k₁)/(), remove(k₂)/()): true
+φ(remove(k₁)/(), size()/r₂): false
+φ(size()/r₁, size()/r₂): true
+UnionFind!("default", false)
+φ(add()/(), add()/()): true
+φ(add()/(), find(x₂)/r₂): true
+φ(add()/(), unite(a₂,b₂)/()): a₂ = b₂
+φ(find(x₁)/r₁, find(x₂)/r₂): true
+φ(find(x₁)/r₁, unite(a₂,b₂)/()): a₂ = b₂
+φ(unite(a₁,b₁)/(), unite(a₂,b₂)/()): a₁ = b₁∧ a₂ = b₂
+UnionFind!("min", false)
+φ(add()/(), add()/()): true
+φ(add()/(), find(x₂)/r₂): true
+φ(add()/(), unite(a₂,b₂)/()): true
+φ(find(x₁)/r₁, find(x₂)/r₂): true
+φ(find(x₁)/r₁, unite(a₂,b₂)/()): a₂ < r₁∧ b₂ < r₁∨ a₂ = b₂
+φ(unite(a₁,b₁)/(), unite(a₂,b₂)/()): true
+UnionFind!("deterministic", false)
+φ(add()/(), add()/()): true
+φ(add()/(), find(x₂)/r₂): true
+φ(add()/(), unite(a₂,b₂)/()): true
+φ(find(x₁)/r₁, find(x₂)/r₂): true
+φ(find(x₁)/r₁, unite(a₂,b₂)/()): a₂ = b₂∨ a₂ = x₁
+φ(unite(a₁,b₁)/(), unite(a₂,b₂)/()): a₁ = a₂∨ a₁ = b₁∨ a₂ = b₂
+UnionFind!("default", true)
+φ(add()/(), add()/()): true
+φ(add()/(), find(x₂)/r₂): true
+φ(add()/(), unite(a₂,b₂)/r₂): ¬ r₂
+φ(find(x₁)/r₁, find(x₂)/r₂): true
+φ(find(x₁)/r₁, unite(a₂,b₂)/r₂): ¬ r₂
+φ(unite(a₁,b₁)/r₁, unite(a₂,b₂)/r₂): ¬ r₁∧ ¬ r₂
+UnionFind!("min", true)
+φ(add()/(), add()/()): true
+φ(add()/(), find(x₂)/r₂): true
+φ(add()/(), unite(a₂,b₂)/r₂): true
+φ(find(x₁)/r₁, find(x₂)/r₂): true
+φ(find(x₁)/r₁, unite(a₂,b₂)/r₂): a₂ < r₁∧ b₂ < r₁∨ ¬ r₂
+φ(unite(a₁,b₁)/r₁, unite(a₂,b₂)/r₂): a₁ = b₁∨ a₂ = b₂∨ ¬ r₁∧ ¬ r₂∨ r₁∧ r₂
+UnionFind!("deterministic", true)
+φ(add()/(), add()/()): true
+φ(add()/(), find(x₂)/r₂): true
+φ(add()/(), unite(a₂,b₂)/r₂): true
+φ(find(x₁)/r₁, find(x₂)/r₂): true
+φ(find(x₁)/r₁, unite(a₂,b₂)/r₂): a₂ = x₁∨ ¬ r₂
+φ(unite(a₁,b₁)/r₁, unite(a₂,b₂)/r₂): (a₁ = a₂∨ a₁ = b₂∨ a₂ = b₁)∧ r₁∧ r₂∨ a₁ = b₁∨ a₂ = b₂∨ ¬ r₁∧ ¬ r₂
+BitTextEditor
+φ(position()/r₁, position()/r₂): true
+φ(position()/r₁, length()/r₂): true
+φ(position()/r₁, read()/r₂): true
+φ(position()/r₁, insert(b₂)/()): false
+φ(position()/r₁, delRight()/()): true
+φ(position()/r₁, delete_()/()): false
+φ(position()/r₁, moveLeft()/()): false
+φ(position()/r₁, moveRight()/()): false
+φ(length()/r₁, length()/r₂): true
+φ(length()/r₁, read()/r₂): r₂
+φ(length()/r₁, insert(b₂)/()): false
+φ(length()/r₁, delRight()/()): false
+φ(length()/r₁, delete_()/()): false
+φ(length()/r₁, moveLeft()/()): true
+φ(length()/r₁, moveRight()/()): false
+φ(read()/r₁, read()/r₂): true
+φ(read()/r₁, insert(b₂)/()): true
+φ(read()/r₁, delRight()/()): false
+φ(read()/r₁, delete_()/()): true
+φ(read()/r₁, moveLeft()/()): false
+φ(read()/r₁, moveRight()/()): false
+φ(insert(b₁)/(), insert(b₂)/()): b₁∧ b₂∨ ¬ b₁∧ ¬ b₂
+φ(insert(b₁)/(), delRight()/()): true
+φ(insert(b₁)/(), delete_()/()): false
+φ(insert(b₁)/(), moveLeft()/()): false
+φ(insert(b₁)/(), moveRight()/()): false
+φ(delRight()/(), delRight()/()): true
+φ(delRight()/(), delete_()/()): true
+φ(delRight()/(), moveLeft()/()): false
+φ(delRight()/(), moveRight()/()): false
+φ(delete_()/(), delete_()/()): true
+φ(delete_()/(), moveLeft()/()): false
+φ(delete_()/(), moveRight()/()): false
+φ(moveLeft()/(), moveLeft()/()): true
+φ(moveLeft()/(), moveRight()/()): false
+φ(moveRight()/(), moveRight()/()): true
+ArrayList!int
+φ(add_at(i₁,v₁)/(), add_at(i₂,v₂)/()): i₁ = i₂∧ v₁ = v₂
+φ(add_at(i₁,v₁)/(), get(i₂)/r₂): i₂ < i₁
+φ(add_at(i₁,v₁)/(), indexOf(v₂)/r₂): r₂ < i₁∧ v₁ ≠ v₂
+φ(add_at(i₁,v₁)/(), lastIndexOf(v₂)/r₂): r₂ < i₁∧ v₁ ≠ v₂
+φ(add_at(i₁,v₁)/(), remove_at(i₂)/()): false
+φ(add_at(i₁,v₁)/(), set(i₂,x₂)/r₂): i₂ < i₁
+φ(add_at(i₁,v₁)/(), size()/r₂): false
+φ(get(i₁)/r₁, get(i₂)/r₂): true
+φ(get(i₁)/r₁, indexOf(v₂)/r₂): true
+φ(get(i₁)/r₁, lastIndexOf(v₂)/r₂): true
+φ(get(i₁)/r₁, remove_at(i₂)/()): i₁ < i₂
+φ(get(i₁)/r₁, set(i₂,x₂)/r₂): i₁ ≠ i₂∨ r₂ = x₂
+φ(get(i₁)/r₁, size()/r₂): true
+φ(indexOf(v₁)/r₁, indexOf(v₂)/r₂): true
+φ(indexOf(v₁)/r₁, lastIndexOf(v₂)/r₂): true
+φ(indexOf(v₁)/r₁, remove_at(i₂)/()): false
+φ(indexOf(v₁)/r₁, set(i₂,x₂)/r₂): r₂ ≠ v₁∧ v₁ ≠ x₂∨ r₂ = x₂
+φ(indexOf(v₁)/r₁, size()/r₂): true
+φ(lastIndexOf(v₁)/r₁, lastIndexOf(v₂)/r₂): true
+φ(lastIndexOf(v₁)/r₁, remove_at(i₂)/()): false
+φ(lastIndexOf(v₁)/r₁, set(i₂,x₂)/r₂): i₂ < r₁∨ r₂ ≠ v₁∧ v₁ ≠ x₂∨ r₂ = x₂
+φ(lastIndexOf(v₁)/r₁, size()/r₂): true
+φ(remove_at(i₁)/(), remove_at(i₂)/()): i₁ = i₂
+φ(remove_at(i₁)/(), set(i₂,x₂)/r₂): i₂ < i₁
+φ(remove_at(i₁)/(), size()/r₂): false
+φ(set(i₁,x₁)/r₁, set(i₂,x₂)/r₂): i₁ ≠ i₂∨ r₁ = r₂∧ x₁ = x₂
+φ(set(i₁,x₁)/r₁, size()/r₂): true
+φ(size()/r₁, size()/r₂): true
+BitList
+φ(set(i₁,x₁)/r₁, set(i₂,x₂)/r₂): i₁ ≠ i₂∨ r₁∧ r₂∧ x₁∧ x₂∨ ¬ r₁∧ ¬ r₂∧ ¬ x₁∧ ¬ x₂
+φ(set(i₁,x₁)/r₁, get(i₂)/r₂): i₁ ≠ i₂∨ r₁∧ x₁∨ ¬ r₁∧ ¬ x₁
+φ(set(i₁,x₁)/r₁, size()/r₂): true
+φ(set(i₁,x₁)/r₁, resize(x₂)/()): true
+φ(set(i₁,x₁)/r₁, insert(i₂,x₂)/()): i₁ < i₂
+φ(set(i₁,x₁)/r₁, remove(i₂)/()): i₁ < i₂∨ i₁ ≠ i₂∧ (r₁∧ x₁∨ ¬ r₁∧ ¬ x₁)
+φ(set(i₁,x₁)/r₁, findFirst(x₂)/r₂): r₂∧ x₁∨ ¬ r₂∧ ¬ x₁
+φ(set(i₁,x₁)/r₁, findLast(x₂)/r₂): i₁ < r₁∨ r₂∧ x₁∨ ¬ r₂∧ ¬ x₁
+φ(set(i₁,x₁)/r₁, toggleFirst(x₂)/()): false
+φ(set(i₁,x₁)/r₁, findClosest(i₂,x₂)/r₂): i₁ < r₁∧ r₁ ≤ i₂∨ i₂ ≤ r₁∧ r₁ < i₁∨ r₂∧ x₁∨ ¬ r₂∧ ¬ x₁
+φ(set(i₁,x₁)/r₁, toggleClosest(i₂,x₂)/()): false
+φ(set(i₁,x₁)/r₁, sort()/()): false
+φ(set(i₁,x₁)/r₁, invertBlock(s₂,e₂)/()): e₂ ≤ i₁∨ i₁ < s₂
+φ(set(i₁,x₁)/r₁, reverseBlock(s₂,e₂)/()): e₂ ≤ i₁∨ i₁ < s₂
+φ(set(i₁,x₁)/r₁, shiftBlock(s₂,e₂)/()): e₂ ≤ i₁∨ i₁ ≤ s₂
+φ(get(i₁)/r₁, get(i₂)/r₂): true
+φ(get(i₁)/r₁, size()/r₂): true
+φ(get(i₁)/r₁, resize(x₂)/()): true
+φ(get(i₁)/r₁, insert(i₂,x₂)/()): i₁ < i₂
+φ(get(i₁)/r₁, remove(i₂)/()): i₁ ≠ i₂
+φ(get(i₁)/r₁, findFirst(x₂)/r₂): true
+φ(get(i₁)/r₁, findLast(x₂)/r₂): true
+φ(get(i₁)/r₁, toggleFirst(x₂)/()): false
+φ(get(i₁)/r₁, findClosest(i₂,x₂)/r₂): true
+φ(get(i₁)/r₁, toggleClosest(i₂,x₂)/()): false
+φ(get(i₁)/r₁, sort()/()): false
+φ(get(i₁)/r₁, invertBlock(s₂,e₂)/()): e₂ ≤ i₁∨ i₁ < s₂
+φ(get(i₁)/r₁, reverseBlock(s₂,e₂)/()): e₂ ≤ i₁∨ i₁ < s₂
+φ(get(i₁)/r₁, shiftBlock(s₂,e₂)/()): e₂ ≤ i₁∨ i₁ ≤ s₂
+φ(size()/r₁, size()/r₂): true
+φ(size()/r₁, resize(x₂)/()): false
+φ(size()/r₁, insert(i₂,x₂)/()): false
+φ(size()/r₁, remove(i₂)/()): false
+φ(size()/r₁, findFirst(x₂)/r₂): true
+φ(size()/r₁, findLast(x₂)/r₂): true
+φ(size()/r₁, toggleFirst(x₂)/()): true
+φ(size()/r₁, findClosest(i₂,x₂)/r₂): true
+φ(size()/r₁, toggleClosest(i₂,x₂)/()): true
+φ(size()/r₁, sort()/()): true
+φ(size()/r₁, invertBlock(s₂,e₂)/()): true
+φ(size()/r₁, reverseBlock(s₂,e₂)/()): true
+φ(size()/r₁, shiftBlock(s₂,e₂)/()): true
+φ(resize(x₁)/(), resize(x₂)/()): x₁ = x₂
+φ(resize(x₁)/(), insert(i₂,x₂)/()): false
+φ(resize(x₁)/(), remove(i₂)/()): false
+φ(resize(x₁)/(), findFirst(x₂)/r₂): false
+φ(resize(x₁)/(), findLast(x₂)/r₂): false
+φ(resize(x₁)/(), toggleFirst(x₂)/()): x₂
+φ(resize(x₁)/(), findClosest(i₂,x₂)/r₂): i₂ = r₂∨ i₂ ≤ r₂∧ r₂ < x₁∧ x₂
+φ(resize(x₁)/(), toggleClosest(i₂,x₂)/()): false
+φ(resize(x₁)/(), sort()/()): false
+φ(resize(x₁)/(), invertBlock(s₂,e₂)/()): true
+φ(resize(x₁)/(), reverseBlock(s₂,e₂)/()): true
+φ(resize(x₁)/(), shiftBlock(s₂,e₂)/()): true
+φ(insert(i₁,x₁)/(), insert(i₂,x₂)/()): i₁ = i₂∧ (x₁∧ x₂∨ ¬ x₁∧ ¬ x₂)
+φ(insert(i₁,x₁)/(), remove(i₂)/()): false
+φ(insert(i₁,x₁)/(), findFirst(x₂)/r₂): r₂ < i₁∧ (x₁∧ ¬ x₂∨ ¬ x₁∧ x₂)
+φ(insert(i₁,x₁)/(), findLast(x₂)/r₂): r₂ < i₁∧ (x₁∧ ¬ x₂∨ ¬ x₁∧ x₂)
+φ(insert(i₁,x₁)/(), toggleFirst(x₂)/()): x₁∧ ¬ x₂∨ ¬ x₁∧ x₂
+φ(insert(i₁,x₁)/(), findClosest(i₂,x₂)/r₂): i₂ ≤ r₂∧ r₂ < i₁
+φ(insert(i₁,x₁)/(), toggleClosest(i₂,x₂)/()): false
+φ(insert(i₁,x₁)/(), sort()/()): false
+φ(insert(i₁,x₁)/(), invertBlock(s₂,e₂)/()): e₂ ≤ i₁∨ e₂ ≤ s₂
+φ(insert(i₁,x₁)/(), reverseBlock(s₂,e₂)/()): e₂ ≤ i₁∨ e₂ ≤ s₂
+φ(insert(i₁,x₁)/(), shiftBlock(s₂,e₂)/()): e₂ ≤ i₁∨ e₂ ≤ s₂
+φ(remove(i₁)/(), remove(i₂)/()): i₁ = i₂
+φ(remove(i₁)/(), findFirst(x₂)/r₂): false
+φ(remove(i₁)/(), findLast(x₂)/r₂): false
+φ(remove(i₁)/(), toggleFirst(x₂)/()): false
+φ(remove(i₁)/(), findClosest(i₂,x₂)/r₂): i₁ ≠ i₂∧ i₂ = r₂∨ i₂ ≤ r₂∧ r₂ < i₁
+φ(remove(i₁)/(), toggleClosest(i₂,x₂)/()): false
+φ(remove(i₁)/(), sort()/()): false
+φ(remove(i₁)/(), invertBlock(s₂,e₂)/()): e₂ ≤ i₁∨ e₂ ≤ s₂
+φ(remove(i₁)/(), reverseBlock(s₂,e₂)/()): e₂ ≤ i₁∨ e₂ ≤ s₂
+φ(remove(i₁)/(), shiftBlock(s₂,e₂)/()): e₂ ≤ i₁∨ i₁ < s₂
+φ(findFirst(x₁)/r₁, findFirst(x₂)/r₂): true
+φ(findFirst(x₁)/r₁, findLast(x₂)/r₂): true
+φ(findFirst(x₁)/r₁, toggleFirst(x₂)/()): false
+φ(findFirst(x₁)/r₁, findClosest(i₂,x₂)/r₂): true
+φ(findFirst(x₁)/r₁, toggleClosest(i₂,x₂)/()): false
+φ(findFirst(x₁)/r₁, sort()/()): false
+φ(findFirst(x₁)/r₁, invertBlock(s₂,e₂)/()): e₂ ≤ s₂
+φ(findFirst(x₁)/r₁, reverseBlock(s₂,e₂)/()): e₂ ≤ r₁∨ e₂ ≤ s₂∨ r₁ < s₂
+φ(findFirst(x₁)/r₁, shiftBlock(s₂,e₂)/()): e₂ ≤ r₁∨ r₁ ≤ s₂
+φ(findLast(x₁)/r₁, findLast(x₂)/r₂): true
+φ(findLast(x₁)/r₁, toggleFirst(x₂)/()): false
+φ(findLast(x₁)/r₁, findClosest(i₂,x₂)/r₂): true
+φ(findLast(x₁)/r₁, toggleClosest(i₂,x₂)/()): false
+φ(findLast(x₁)/r₁, sort()/()): false
+φ(findLast(x₁)/r₁, invertBlock(s₂,e₂)/()): e₂ ≤ r₁∨ e₂ ≤ s₂
+φ(findLast(x₁)/r₁, reverseBlock(s₂,e₂)/()): e₂ ≤ r₁∨ e₂ ≤ s₂∨ r₁ < s₂
+φ(findLast(x₁)/r₁, shiftBlock(s₂,e₂)/()): e₂ ≤ r₁∨ r₁ ≤ s₂
+φ(toggleFirst(x₁)/(), toggleFirst(x₂)/()): x₁∧ x₂∨ ¬ x₁∧ ¬ x₂
+φ(toggleFirst(x₁)/(), findClosest(i₂,x₂)/r₂): false
+φ(toggleFirst(x₁)/(), toggleClosest(i₂,x₂)/()): x₁∧ x₂∨ ¬ x₁∧ ¬ x₂
+φ(toggleFirst(x₁)/(), sort()/()): x₁
+φ(toggleFirst(x₁)/(), invertBlock(s₂,e₂)/()): e₂ ≤ s₂
+φ(toggleFirst(x₁)/(), reverseBlock(s₂,e₂)/()): e₂ ≤ s₂
+φ(toggleFirst(x₁)/(), shiftBlock(s₂,e₂)/()): e₂ ≤ s₂
+φ(findClosest(i₁,x₁)/r₁, findClosest(i₂,x₂)/r₂): true
+φ(findClosest(i₁,x₁)/r₁, toggleClosest(i₂,x₂)/()): false
+φ(findClosest(i₁,x₁)/r₁, sort()/()): false
+φ(findClosest(i₁,x₁)/r₁, invertBlock(s₂,e₂)/()): e₂ ≤ r₁∧ r₁ ≤ i₁∨ e₂ ≤ s₂∨ i₁ ≤ r₁∧ r₁ < s₂
+φ(findClosest(i₁,x₁)/r₁, reverseBlock(s₂,e₂)/()): (e₂ ≤ i₁∨ i₁ ≤ r₁)∧ r₁ < s₂∨ e₂ < i₁∧ i₁ ≤ r₁∧ ¬ x₁∨ e₂ ≤ r₁∧ (i₁ ≤ s₂∨ r₁ ≤ i₁)∨ e₂ ≤ s₂
+φ(findClosest(i₁,x₁)/r₁, shiftBlock(s₂,e₂)/()): (e₂ ≤ i₁∨ i₁ ≤ r₁)∧ r₁ ≤ s₂∨ e₂ ≤ r₁∧ (i₁ ≤ s₂∨ r₁ ≤ i₁)∨ e₂ ≤ s₂
+φ(toggleClosest(i₁,x₁)/(), toggleClosest(i₂,x₂)/()): i₁ = i₂∧ (x₁∧ x₂∨ ¬ x₁∧ ¬ x₂)
+φ(toggleClosest(i₁,x₁)/(), sort()/()): false
+φ(toggleClosest(i₁,x₁)/(), invertBlock(s₂,e₂)/()): e₂ ≤ s₂
+φ(toggleClosest(i₁,x₁)/(), reverseBlock(s₂,e₂)/()): e₂ ≤ s₂
+φ(toggleClosest(i₁,x₁)/(), shiftBlock(s₂,e₂)/()): e₂ ≤ s₂
+φ(sort()/(), sort()/()): true
+φ(sort()/(), invertBlock(s₂,e₂)/()): e₂ ≤ s₂
+φ(sort()/(), reverseBlock(s₂,e₂)/()): e₂ ≤ s₂
+φ(sort()/(), shiftBlock(s₂,e₂)/()): e₂ ≤ s₂
+φ(invertBlock(s₁,e₁)/(), invertBlock(s₂,e₂)/()): true
+φ(invertBlock(s₁,e₁)/(), reverseBlock(s₂,e₂)/()): e₁ ≤ s₁∨ e₁ ≤ s₂∨ e₂ ≤ e₁∧ s₁ ≤ s₂∨ e₂ ≤ s₁
+φ(invertBlock(s₁,e₁)/(), shiftBlock(s₂,e₂)/()): e₁ ≤ s₁∨ e₁ ≤ s₂∨ e₂ ≤ e₁∧ s₁ ≤ s₂∨ e₂ ≤ s₁
+φ(reverseBlock(s₁,e₁)/(), reverseBlock(s₂,e₂)/()): e₁ = e₂∧ s₁ = s₂∨ e₁ ≤ s₁∨ e₁ ≤ s₂∨ e₂ ≤ s₁∨ e₂ ≤ s₂
+φ(reverseBlock(s₁,e₁)/(), shiftBlock(s₂,e₂)/()): e₁ ≤ s₁∨ e₁ ≤ s₂∨ e₂ ≤ s₁∨ e₂ ≤ s₂
+φ(shiftBlock(s₁,e₁)/(), shiftBlock(s₂,e₂)/()): e₁ = e₂∧ s₁ = s₂∨ e₁ ≤ s₁∨ e₁ ≤ s₂∨ e₂ ≤ s₁∨ e₂ ≤ s₂
+
+
+
+
+
+
+
+
+
+
+
+
+
 UnionFind
 φ(add()/r₁, add()/r₂): true
 φ(add()/r₁, find(x₂)/r₂): true

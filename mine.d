@@ -148,8 +148,8 @@ struct ExploreStore{
 		return r[].filter!(a=>a.type==mixin(`Type.`~s)).map!(a=>mixin(`a.`~s));
 	}
 	void addResult(MethodArgs[2] a, Value[2] res, bool c){
-		auto resints=resfilter!`int_`(res[]);
-		auto resbools=resfilter!`bool_`(res[]);
+		auto resints=resfilter!`int_`(res[].expandTuples());
+		auto resbools=resfilter!`bool_`(res[].expandTuples());
 		auto ints=chain(a[0].ints,a[1].ints,resints);
 		auto bools=chain(a[0].bools,a[1].bools,resbools);
 		OrderedPartition p;
@@ -491,14 +491,14 @@ auto inferSoundSpec(T, string m1, string m2)(int numSamples){
 }
 private struct Void{}
 
-struct Terminals(T, string m1, string m2, alias putResult=Void){
+struct ExplorationState(T, string m1, string m2, alias putResult=Void){
 	alias m1a=ID!(mixin("T."~m1));
 	alias m2a=ID!(mixin("T."~m2));
 	alias ty1=Seq!(ParameterTypeTuple!m1a,ReturnType!m1a);
 	alias ty2=Seq!(ParameterTypeTuple!m2a,ReturnType!m2a);
 	alias i1=Seq!(ParameterIdentifierTuple!m1a);
 	alias i2=Seq!(ParameterIdentifierTuple!m2a);
-	Terminal[] t1,t2,t12;
+	Terminal[] t1,t2;
 
 	Terminal[] tbools;
 	Terminal[] tints;
@@ -507,51 +507,59 @@ struct Terminals(T, string m1, string m2, alias putResult=Void){
 	int[] ints1,ints2;
 	bool[] bools1,bools2;
 
+	ExploreStore exploration;
+
 	static if(!is(putResult==Void)){
 		size_t nrint=is(ty1[$-1]==int)+is(ty2[$-1]==int);
 		size_t nrbool=is(ty1[$-1]==bool)+is(ty2[$-1]==bool);
 		Terminal[] terms;
 	}
-	void initialize(){
+	private void handle(T,bool isarg=true)(ref int[] ints,ref bool[] bools,Terminal t){
+		static if(is(T==bool)){
+			tbools~=t;
+			static if(isarg) bools~=false;
+			split~=Type.bool_;
+		}else static if(is(T==int)){
+			tints~=t;
+			static if(isarg) ints~=0;
+			split~=Type.int_;
+		}else static if(is(T==void)){
+			// nothing to do
+		}else static if(is(T==Tuple!U,U...)){
+			foreach(i,S;U)
+				handle!(S,isarg)(ints,bools,.t("π_"~to!string(i+1)~"("~t.toString()~")"));
+		}else static assert(is(T==void),"unsupported parameter type: "~T.stringof);
+	}
+	@disable this();
+	this(int){
 		t1=[i1,"r"].map!(a=>(a~"₁").t).array;
 		t2=[i2,"r"].map!(a=>(a~"₂").t).array;
-		t12=t1[0..$-1]~t2[0..$-1]~t1[$-1]~t2[$-1];
-		foreach(i,tt;Seq!(ty1[0..$-1],ty2[0..$-1],ty1[$-1],ty2[$-1])){
-			static if(is(tt==bool)){
-				tbools~=t12[i];
-				if(i<ty1.length+ty2.length-2) (i<ty1.length-1?bools1:bools2)~=false;
-				split~=Type.bool_;
-			}else static if(is(tt==int)){
-				tints~=t12[i];
-				if(i<ty1.length+ty2.length-2) (i<ty1.length-1?ints1:ints2)~=0;
-				split~=Type.int_;
-			}else static assert(is(tt==void),"unsupported parameter type: "~tt.stringof);
-		}
-		static if(!is(putResult==Void)){
-			terms=tints[0..$-nrint]~tbools[0..$-nrbool];
-			static if(!is(ty1[$-1]==void)) terms~=t1[$-1];
-			static if(!is(ty2[$-1]==void)) terms~=t2[$-1];
-		}
+		foreach(i,tt;ty1[0..$-1]) handle!tt(ints1,bools1,t1[i]);
+		foreach(i,tt;ty2[0..$-1]) handle!tt(ints2,bools2,t2[i]);
+		terms=tints~tbools;
+		auto intlen=tints.length, boollen=tbools.length;
+		handle!(ty1[$-1],false)(ints1,bools1,t1[$-1]);
+		handle!(ty2[$-1],false)(ints2,bools2,t2[$-1]);
+		terms~=tints[intlen..$]~tbools[boollen..$];
+		exploration=ExploreStore(split);
 	}
 }
 
 auto runExploration(T, string m1, string m2, alias putResult=Void)(int numSamples=0){
-	Terminals!(T,m1,m2,putResult) terms; terms.initialize();
-	return runExplorationWithTerms!(T,m1,m2,putResult)(terms,numSamples);
+	auto state=ExplorationState!(T,m1,m2,putResult)(0);
+	return runExplorationWithState!(T,m1,m2,putResult)(state,numSamples);
 }
 
-auto runExplorationWithTerms(T, string m1, string m2, alias putResult=Void)(Terminals!(T,m1,m2,putResult) termstore,int numSamples=0){
-	with(termstore){
+auto runExplorationWithState(T, string m1, string m2, alias putResult=Void)(ExplorationState!(T,m1,m2,putResult) state,int numSamples=0){ with(state){
 	MethodArgs[2] a=[MethodArgs(ints1,bools1),MethodArgs(ints2,bools2)];
 
-	auto exploration=ExploreStore(split);
 	void addResult(MethodArgs[2] a,Value[2] res,bool c,ref T t){
 		exploration.addResult(a,res,c);
 		static if(!is(putResult==Void)){
 			putResult(Assignment(terms, chain(
 						chain(ints1,ints2).map!Value,
 						chain(bools1,bools2).map!Value,
-						res[].filter!(a=>a.type!=Type.none_)).array),c,t);
+						res[].expandTuples().filter!(a=>a.type!=Type.none_)).array),c,t);
 		}
 	}
 	void randomExploration(int max){

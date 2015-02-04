@@ -28,10 +28,10 @@ auto inferOccamSpecCommon(alias s,alias addOccamResult,T,string m1,string m2)(in
 
 auto inferOccamSpecAdaptive(alias s,alias addOccamResult,T,string m1,string m2)(){
 	int numSamples=5000;
-	Terminals!(T,m1,m2,addOccamResult) terms; terms.initialize();
+	auto state=ExplorationState!(T,m1,m2,addOccamResult)(0);
 	for(Formula last=null;;numSamples*=2){
 		auto sw=StopWatch(AutoStart.yes);
-		runExplorationWithTerms!(T,m1,m2,addOccamResult)(terms,numSamples);
+		runExplorationWithState!(T,m1,m2,addOccamResult)(state,numSamples);
 		auto f=buildFormula(s.maybeToNo(),sw.peek());
 		if(f&&f is last) return f;
 		last=f;

@@ -575,21 +575,39 @@ enum Type{
 	none_,
 	bool_,
 	int_,
+	tuple_,
 }
 struct Value{
 	this(int r){ this.r=r; tt=Type.int_; }
 	this(bool r){ this.r=r; tt=Type.bool_; }
+	this(T...)(Tuple!T args){
+		a=[];
+		foreach(x;args) a~=Value(x);
+		tt=Type.tuple_;
+	}
 	@property Type type(){ return tt; }
 	int int_()in{assert(type==Type.int_);}body{ return r; }
 	bool bool_()in{assert(type==Type.bool_);}body{ return !!r; }
+	Value[] tuple_()in{assert(type==Type.tuple_);}body{ return a; }
 
 	T get(T)(){ static if(is(T==int)) return int_; static if(is(T==bool)) return bool_; }
 
 	string toString(){ return tt==Type.bool_?(!!r).to!string:tt==Type.int_?r.to!string:"()"; }
-	int opCmp(Value b){ return type==b.type?(r==b.r?0:r<b.r?-1:1):type==Type.int_?-1:1; }
+	int opCmp(Value b)in{assert(type!=Type.tuple_);}body{ return type==b.type?(r==b.r?0:r<b.r?-1:1):type==Type.int_?-1:1; }
 private:
 	Type tt;
 	int r;
+	Value[] a; // TODO: it would be nice if this wouldn't slow down everything so much -> use r as pointer?
+}
+
+Value[] expandTuples(Value[] v){
+	if(v.all!(a=>a.type!=Type.tuple_)) return v;
+	Value[] r;
+	foreach(x;v){
+		if(x.type==Type.tuple_) r~=x.tuple_;
+		else r~=x;
+	}
+	return r.expandTuples();
 }
 
 struct Assignment{

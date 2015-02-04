@@ -488,7 +488,7 @@ void performMeasurements(alias measure)(){
 	/+measure!Queue; // TODO: exceptions are slow, do this some other way?
 	measure!Stack; // TODO: ditto
 	measure!MinHeap; // TODO: ditto+/
-	// measure!LexicographicProximityQuery; // TODO: multiple return values!
+	//measure!LexicographicProximityQuery; // TODO: why is this so hard?
 	measure!(MultiSet!int);
 	measure!(PartialMap); // TODO: why is put/size spec wrong consistently?
 	measure!(UnionFind!("default",false))();
