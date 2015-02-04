@@ -498,7 +498,7 @@ void performMeasurements(alias measure)(){
 	measure!(UnionFind!"deterministic")();
 	measure!BitTextEditor;
 	measure!(ArrayList!int)();
-	measure!BitList;+/
+	measure!BitList;
 }
 
 void runExperiments()(){
