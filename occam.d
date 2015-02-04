@@ -210,13 +210,16 @@ private:
 }
 
 // version=VERY_VERBOSE;
-Formula minimalEquivalentTo(ResultStore s,Formula[] bp){
+Formula minimalEquivalentTo(ResultStore s,Formula[] bp,TickDuration timeout=TickDuration(0)){
+	bool to=timeout!=TickDuration(0);
+	StopWatch sw; if(to) sw.start();
 	auto fhash=equivClassHashOf(s);
 	foreach(EquivOnFormula g;NonEquivalentMinimalFormulasOn!()(s,100,bp)){
 		version(VERY_VERBOSE){ import std.stdio; writeln("s: ",g.f.size()," considering formula ",g.f," ",g.toHash()); }
 		if(g.toHash()!=fhash) continue;
 		if(g.f.equivalentTo(s))
 			return g.f;
+		if(to&&sw.peek()>timeout) return null; // TODO: iterate formulas on the fly while they are generated
 	}
 	return null;
 }
@@ -285,7 +288,7 @@ Formula greedyEquivalentTo(ResultStore s,Formula[] bp,TickDuration timeout=TickD
 			uncovered=removeFrom(g.f,uncovered);
 		}
 		if(formulas.length&&!uncovered.map.length) if(auto r=tryBuild(curSiz*2)) return r;
-		if(to&&sw.peek()>timeout) return null;
+		if(to&&sw.peek()>timeout) return null; // TODO: iterate formulas on the fly while they are generated
 	}
 	return null;
 }

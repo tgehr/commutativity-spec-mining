@@ -23,12 +23,10 @@ enum searchTimeout=10;
 
 auto obtainTimedSpec(alias dg, bool isATimeout=false)(int searchTimeout){
 	TimedSpec spec;
-	static if(isATimeout){ spec.timedOut=true; }
-	else{
-		auto sw=StopWatch(AutoStart.yes);
-		spec.formula=dg();
-		spec.time=sw.peek();
-	}
+	//static if(isATimeout){ spec.timedOut=true; return spec; }
+	auto sw=StopWatch(AutoStart.yes);
+	spec.formula=dg(cast(TickDuration)searchTimeout.dur!"seconds");
+	spec.time=sw.peek();
 	return spec;
 }
 
@@ -89,32 +87,32 @@ auto inferTimedOccamSpec(T, string m1, string m2)(int numSamples=0, int searchTi
 		false,
 		false];
 	version(VERBOSE) writeln("greedy w/o");
-	stats.greedy[0]=obtainTimedSpec!({
+	stats.greedy[0]=obtainTimedSpec!((TickDuration timeout){
 		auto bp=extractRelevantBasicPredicates!(incompat,true,true)(s).array;
-		auto f=greedyEquivalentTo(s,bp);
+		auto f=greedyEquivalentTo(s,bp,timeout);
 		f=f.factorGreedily();
 		return f;
 	},tooLargeForGreedy[0])(searchTimeout);
 	version(VERBOSE) writeln(stats.greedy[0].formula);
 	version(VERBOSE) writeln("exhaustive w/o");
-	stats.exhaustive[0]=obtainTimedSpec!({
+	stats.exhaustive[0]=obtainTimedSpec!((TickDuration timeout){
 		auto bp=extractRelevantBasicPredicates!(incompat,true,true)(s).array;
-		auto f=minimalEquivalentTo(s,bp);
+		auto f=minimalEquivalentTo(s,bp,timeout);
 		return f;
 	},tooLargeForExhaustive[0])(searchTimeout);
 	version(VERBOSE) writeln(stats.exhaustive[0].formula);
 	version(VERBOSE) writeln("greedy w/");
-	stats.greedy[1]=obtainTimedSpec!({
+	stats.greedy[1]=obtainTimedSpec!((TickDuration timeout){
 		auto bp=extractRelevantBasicPredicates!(incompat,true)(s).array;
-		auto f=greedyEquivalentTo(s,bp);
+		auto f=greedyEquivalentTo(s,bp,timeout);
 		f=f.factorGreedily();
 		return f;
 	},tooLargeForGreedy[1])(searchTimeout);
 	version(VERBOSE) writeln(stats.greedy[1].formula);
 	version(VERBOSE) writeln("exhaustive w/");
-	stats.exhaustive[1]=obtainTimedSpec!({
+	stats.exhaustive[1]=obtainTimedSpec!((TickDuration timeout){
 		auto bp=extractRelevantBasicPredicates!(incompat,true)(s).array;
-		auto f=minimalEquivalentTo(s,bp);
+		auto f=minimalEquivalentTo(s,bp,timeout);
 		return f;
 	},tooLargeForExhaustive[1])(searchTimeout);
 	version(VERBOSE) writeln(stats.exhaustive[1].formula);
@@ -476,8 +474,8 @@ void measureTypeDiagrams(T)(){
 
 
 void performMeasurements(alias measure)(){
-	measure!LexicographicProximityQuery;
-/+	measure!(Set!int);
+	// measure!LexicographicProximityQuery;
+	measure!(Set!int);
 	measure!(Map!(int,int));
 	measure!(MaxRegister!int);
 	measure!RangeUpdate; // maybe imprecise. TODO: figure this out
