@@ -4,9 +4,10 @@ import mine, formula;
 import hashtable;
 
 
+enum bool disablePredicateDiscovery=false;
 private auto buildFormula(ResultStore t,TickDuration timeout=TickDuration(0)){
 	version(VERBOSE) writeln("inferring formula...");
-	auto bp=extractRelevantBasicPredicates!(incompat,true)(t).array;
+	auto bp=extractRelevantBasicPredicates!(incompat,true,disablePredicateDiscovery)(t).array;
 	version(VERY_VERBOSE) writeln(bp,"\n",t);
 	//writeln(bp.length," ",bp);
 	auto f=greedyEquivalentTo(t,bp,timeout);
