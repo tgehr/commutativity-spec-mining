@@ -9,7 +9,7 @@ import util;
 //alias defaultInferenceMethod=inferSoundSpec;
 alias defaultInferenceMethod=inferOccamSpec;
 
-void printSpecs(T,alias inferenceMethod=defaultInferenceMethod)(int numSamples=5000){
+void printSpecs(T,alias inferenceMethod=defaultInferenceMethod)(int numSamples=0){
 	writeln(T.stringof);
 	alias m=Seq!(__traits(allMembers,T));
 	bool dontConsider(string s){
@@ -167,6 +167,7 @@ void main(){
 	import experiments;
 	//runExperiments();
 	performMeasurements!printSpecs;
+	//performMeasurements!measureTypeDiagrams();
 	//runTypeCounting();
 	// captured precisely in the fragment:
 	/+printSpecs!(Set!int);

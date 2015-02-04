@@ -205,13 +205,13 @@ private:
 		}
 		void allocnext(Type[] split,size_t i, size_t plen){
 			if(!next[i]){
-				if(split.length==1) 
+				if(split.length==1)
 					next[i]=new Leaf();
 				else{
 					assert(split.length);
 					next[i]=new InternalNode(split[1]==Type.int_?2*plen+1:2);
 				}
-			}				
+			}
 		}
 		override void add(Type[] split,ref OrderedPartition p,CI3 ints, CB3 bools,bool c){
 			//dw(split,p,ints,bools,c);
@@ -305,27 +305,34 @@ private:
 	Node r;
 }
 
+enum bool enableSampleSizeReduction=true;
+
 struct EquivAssignment{
 	Assignment a;
-	bool opEquals(EquivAssignment e){
-		foreach(ta1,va1;a){
-			if(va1.type==Type.bool_){
-				if(va1!=e.a[ta1]) return false;
-			}else foreach(tb2,vb2;e.a)
-				if((va1<=a[tb2])!=(e.a[ta1]<=vb2))
-					return false;
+	static if(enableSampleSizeReduction){
+		bool opEquals(EquivAssignment e){
+			foreach(ta1,va1;a){
+				if(va1.type==Type.bool_){
+					if(va1!=e.a[ta1]) return false;
+				}else foreach(tb2,vb2;e.a)
+					if((va1<=a[tb2])!=(e.a[ta1]<=vb2))
+						return false;
+			}
+			return true;
 		}
-		return true;
-	}
-	size_t toHash(){
-		size_t hash=FNV(0);
-		foreach(ta1,va1;a){
-			if(va1.type==Type.bool_)
-				hash=FNV(va1.bool_,hash);
-			else foreach(ta2,va2;a)
-				hash=FNV(va1<=va2,hash);
+		size_t toHash(){
+			size_t hash=FNV(0);
+			foreach(ta1,va1;a){
+				if(va1.type==Type.bool_)
+					hash=FNV(va1.bool_,hash);
+				else foreach(ta2,va2;a)
+					hash=FNV(va1<=va2,hash);
+			}
+			return hash;
 		}
-		return hash;
+	}else{
+		bool opEquals(EquivAssignment e){ return a==e.a; }
+		size_t toHash(){ return typeid(a).getHash(&a); }
 	}
 	string toString(){ return a.toString()~"ₑ"; }
 
@@ -396,7 +403,7 @@ struct ResultStore{
 		return r;
 	}
 
-	bool[2] intEquatable(alias incompat,bool occam)(Terminal a, Terminal b){ 
+	bool[2] intEquatable(alias incompat,bool occam)(Terminal a, Terminal b){
 		bool[2] r=[true,true];
 		foreach(k,v;map){
 			auto va=k.a[a], vb=k.a[b];
@@ -467,7 +474,7 @@ FormulaSet extractRelevantBasicPredicates(alias incompat=soundincompat,bool occa
 			static if(!returnAll) auto bs=s.intSymmetric!incompat(x,y);
 			else bool[2] bs=[false,false];
 			if(!bs[0]||!occam&&!bs[1]) r.insert(x.lt(y));
-			if(!bs[1]||!occam&&!bs[0]) r.insert(not(x.lt(y)));			
+			if(!bs[1]||!occam&&!bs[0]) r.insert(not(x.lt(y)));
 		}
 	}
 	return r;
@@ -484,45 +491,58 @@ auto inferSoundSpec(T, string m1, string m2)(int numSamples){
 	return s.getFormula().minimalEquivalent(bp);
 }
 private struct Void{}
-auto runExploration(T, string m1, string m2, alias putResult=Void)(int numSamples=5000){
+
+struct Terminals(T, string m1, string m2, alias putResult=Void){
 	alias m1a=ID!(mixin("T."~m1));
 	alias m2a=ID!(mixin("T."~m2));
 	alias ty1=Seq!(ParameterTypeTuple!m1a,ReturnType!m1a);
 	alias ty2=Seq!(ParameterTypeTuple!m2a,ReturnType!m2a);
 	alias i1=Seq!(ParameterIdentifierTuple!m1a);
 	alias i2=Seq!(ParameterIdentifierTuple!m2a);
-	auto t1=[i1,"r"].map!(a=>(a~"₁").t).array;
-	auto t2=[i2,"r"].map!(a=>(a~"₂").t).array;
-
-	auto t12=chain(t1[0..$-1],t2[0..$-1],only(t1[$-1]),only(t2[$-1]));
+	Terminal[] t1,t2,t12;
 
 	Terminal[] tbools;
 	Terminal[] tints;
 	Type[] split;
-	
+
 	int[] ints1,ints2;
 	bool[] bools1,bools2;
-
-	foreach(i,tt;Seq!(ty1[0..$-1],ty2[0..$-1],ty1[$-1],ty2[$-1])){
-		static if(is(tt==bool)){
-			tbools~=t12[i];
-			if(i<ty1.length+ty2.length-2) (i<ty1.length-1?bools1:bools2)~=false;
-			split~=Type.bool_;
-		}else static if(is(tt==int)){
-			tints~=t12[i];				
-			if(i<ty1.length+ty2.length-2) (i<ty1.length-1?ints1:ints2)~=0;
-			split~=Type.int_;
-		}else static assert(is(tt==void),"unsupported parameter type: "~tt.stringof);		
-	}
 
 	static if(!is(putResult==Void)){
 		size_t nrint=is(ty1[$-1]==int)+is(ty2[$-1]==int);
 		size_t nrbool=is(ty1[$-1]==bool)+is(ty2[$-1]==bool);
-		Terminal[] terms=tints[0..$-nrint]~tbools[0..$-nrbool];
-		static if(!is(ty1[$-1]==void)) terms~=t1[$-1];
-		static if(!is(ty2[$-1]==void)) terms~=t2[$-1];
+		Terminal[] terms;
 	}
+	void initialize(){
+		t1=[i1,"r"].map!(a=>(a~"₁").t).array;
+		t2=[i2,"r"].map!(a=>(a~"₂").t).array;
+		t12=t1[0..$-1]~t2[0..$-1]~t1[$-1]~t2[$-1];
+		foreach(i,tt;Seq!(ty1[0..$-1],ty2[0..$-1],ty1[$-1],ty2[$-1])){
+			static if(is(tt==bool)){
+				tbools~=t12[i];
+				if(i<ty1.length+ty2.length-2) (i<ty1.length-1?bools1:bools2)~=false;
+				split~=Type.bool_;
+			}else static if(is(tt==int)){
+				tints~=t12[i];
+				if(i<ty1.length+ty2.length-2) (i<ty1.length-1?ints1:ints2)~=0;
+				split~=Type.int_;
+			}else static assert(is(tt==void),"unsupported parameter type: "~tt.stringof);
+		}
+		static if(!is(putResult==Void)){
+			terms=tints[0..$-nrint]~tbools[0..$-nrbool];
+			static if(!is(ty1[$-1]==void)) terms~=t1[$-1];
+			static if(!is(ty2[$-1]==void)) terms~=t2[$-1];
+		}
+	}
+}
 
+auto runExploration(T, string m1, string m2, alias putResult=Void)(int numSamples=0){
+	Terminals!(T,m1,m2,putResult) terms; terms.initialize();
+	return runExplorationWithTerms!(T,m1,m2,putResult)(terms,numSamples);
+}
+
+auto runExplorationWithTerms(T, string m1, string m2, alias putResult=Void)(Terminals!(T,m1,m2,putResult) termstore,int numSamples=0){
+	with(termstore){
 	MethodArgs[2] a=[MethodArgs(ints1,bools1),MethodArgs(ints2,bools2)];
 
 	auto exploration=ExploreStore(split);
@@ -539,7 +559,7 @@ auto runExploration(T, string m1, string m2, alias putResult=Void)(int numSample
 		T t;
 		auto maxNumInactive=long.max;
 		int numInactive=0,i=0;
-		for(;(i<50000||i<exploration.count()*50000)&&i<max&&numInactive<maxNumInactive;i++){
+		for(;i<max;i++){
 			if(!uniform(0,10)) t=T.init;
 			foreach(_;0..uniform(0,10)) modify(t);
 			bool foundAll=false;
@@ -562,10 +582,9 @@ auto runExploration(T, string m1, string m2, alias putResult=Void)(int numSample
   			auto nr=exploration.count();
 			scope(success) if(exploration.count()==nr) numInactive++; else numInactive=0;
 			addResult(a,res[0],c,t);
-			if(!c) addResult(a,res[1],c,t);
+			if(!c){ addResult(a,res[1],c,t); i++; }
 			// if(nr!=exploration.count()) writeln("found result using ",t);
 			version(VERBOSE) if(!(i%10000)) writeln("iteration #",i,"\t #results found: ",exploration.count());
-			maxNumInactive=1000*exploration.count();
 		}
 		version(VERBOSE_BOUNDS){
 			assert(i>=max||numInactive>=maxNumInactive);
@@ -654,7 +673,7 @@ auto runExploration(T, string m1, string m2, alias putResult=Void)(int numSample
 		f=f.simplify;
 		return f;
 	}
-}
+}}
 
 //version=VERBOSE;
 //version=VERY_VERBOSE;

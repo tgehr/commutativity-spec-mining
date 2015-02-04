@@ -1,24 +1,43 @@
 import std.array, std.algorithm, std.stdio;
+import std.datetime;
 import mine, formula;
 import hashtable;
 
 
-private auto inferOccamSpecCommon(alias s,alias addOccamResult,T,string m1,string m2)(int numSamples){
-	runExploration!(T,m1,m2,addOccamResult)(numSamples);
-	s=s.maybeToNo();
+private auto buildFormula(ResultStore t,TickDuration timeout=TickDuration(0)){
 	version(VERBOSE) writeln("inferring formula...");
-	auto bp=extractRelevantBasicPredicates!(incompat,true)(s).array;
-	version(VERY_VERBOSE) writeln(bp,"\n",s);
+	auto bp=extractRelevantBasicPredicates!(incompat,true)(t).array;
+	version(VERY_VERBOSE) writeln(bp,"\n",t);
 	//writeln(bp.length," ",bp);
-	auto f=greedyEquivalentTo(s,bp);
+	auto f=greedyEquivalentTo(t,bp,timeout);
 	f=f.factorGreedily();
-	//auto f=minimalEquivalentTo(s,bp);
-	//auto f=monteCarloMarkovChainEquivalentTo(s,bp);
-	if(!f) f=s.getFormula();
+	//auto f=minimalEquivalentTo(t,bp);
+	//auto f=monteCarloMarkovChainEquivalentTo(t,bp);
 	return f;
 }
 
-auto inferOccamSpec(T, string m1, string m2)(int numSamples=5000){
+auto inferOccamSpecCommon(alias s,alias addOccamResult,T,string m1,string m2)(int numSamples){
+	if(!numSamples) return inferOccamSpecAdaptive!(s,addOccamResult,T,m1,m2)();
+	runExploration!(T,m1,m2,addOccamResult)(numSamples);
+	auto t=s.maybeToNo();
+	auto f=buildFormula(t);
+	if(!f) f=t.getFormula();
+	return f;
+}
+
+auto inferOccamSpecAdaptive(alias s,alias addOccamResult,T,string m1,string m2)(){
+	int numSamples=5000;
+	Terminals!(T,m1,m2,addOccamResult) terms; terms.initialize();
+	for(Formula last=null;;numSamples*=2){
+		auto sw=StopWatch(AutoStart.yes);
+		runExplorationWithTerms!(T,m1,m2,addOccamResult)(terms,numSamples);
+		auto f=buildFormula(s.maybeToNo(),sw.peek());
+		if(f&&f is last) return f;
+		last=f;
+	}
+}
+
+auto inferOccamSpec(T, string m1, string m2)(int numSamples=0){
 	ResultStore s;
 	bool[] isNew;
 	void addOccamResult(Assignment a,bool c,ref T t){
@@ -227,8 +246,11 @@ ResultStore trueAssignments(ResultStore s){
 	return ResultStore(map);
 }
 
-Formula greedyEquivalentTo(ResultStore s,Formula[] bp){
+Formula greedyEquivalentTo(ResultStore s,Formula[] bp,TickDuration timeout=TickDuration(0)){
+	bool to=timeout!=TickDuration(0);
+	StopWatch sw; if(to) sw.start();
 	if(ff.equivalentTo(s)) return ff;
+	auto uncovered=s.trueAssignments();
 	Formula[] formulas;
 	Formula tryBuild(size_t maxNumDisjuncts)in{assert(formulas.length);}body{
 		auto tmps=s.trueAssignments();
@@ -252,14 +274,17 @@ Formula greedyEquivalentTo(ResultStore s,Formula[] bp){
 			r=r.or(best);
 			assert(tmps.map.length);
 		}
-		return null;		
+		return null;
 	}
 	auto minformulas=NonEquivalentMinimalFormulasOn!And(s,100,bp);
 	foreach(curSiz;0..100){
 		foreach(EquivOnFormula g;minformulas.iterateThroughSize(curSiz)){
-			if(g.f.implies(s)) formulas~=g.f;
+			if(!g.f.implies(s)) continue;
+			formulas~=g.f;
+			uncovered=removeFrom(g.f,uncovered);
 		}
-		if(formulas.length) if(auto r=tryBuild(curSiz*2)) return r;
+		if(formulas.length&&!uncovered.map.length) if(auto r=tryBuild(curSiz*2)) return r;
+		if(to&&sw.peek()>timeout) return null;
 	}
 	return null;
 }

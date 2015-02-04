@@ -46,7 +46,7 @@ int computeNumClasses(int numVariables){
 	return tot;
 }
 
-auto inferTimedOccamSpec(T, string m1, string m2)(int numSamples=5000, int searchTimeout=searchTimeout){
+auto inferTimedOccamSpec(T, string m1, string m2)(int numSamples=0, int searchTimeout=searchTimeout){
 	scope(exit){
 		resetUniqueMaps();
 		import core.memory;
@@ -60,7 +60,8 @@ auto inferTimedOccamSpec(T, string m1, string m2)(int numSamples=5000, int searc
 		s.addResult(a,c);
 	}
 	auto sw=StopWatch(AutoStart.yes);
-	runExploration!(T,m1,m2,addOccamResult)(numSamples);
+	//runExploration!(T,m1,m2,addOccamResult)(numSamples);
+	inferOccamSpecAdaptive!(s,addOccamResult,T,m1,m2)();
 	s=s.maybeToNo();
 	stats.exploration=sw.peek();
 	stats.numSamples=actualNumSamples;
@@ -72,7 +73,7 @@ auto inferTimedOccamSpec(T, string m1, string m2)(int numSamples=5000, int searc
 		is(T==Map!(int,int)) && m1=="put" && m2=="put" ||
 		is(T==RangeUpdate) && m1=="add2" && m2=="square" ||
 		is(T==KDTree!int) && m1=="add" && m2=="nearest" ||
-		is(T==KDTree!int) && m1=="remove" && m2=="nearest" || 
+		is(T==KDTree!int) && m1=="remove" && m2=="nearest" ||
 		is(T==UnionFind!("deterministic",false)) && m1=="unite" && m2=="unite" ||
 		is(T==UnionFind!("min",true)) && m1=="unite" && m2=="unite" ||
 		is(T==UnionFind!("deterministic",true)) && m1=="unite" && m2=="unite"||
@@ -195,7 +196,7 @@ struct SpecSummary{
 		foreach(i;0..2){
 			greedy[i].addTo(td);
 			exhaustive[i].addTo(td);
-		}		
+		}
 	}
 	void divBy(int x){
 		assert(!(numStats%x));
@@ -237,7 +238,7 @@ void forallMethodPairs(T,alias action,A...)(A args){
 					action!(m[i],m[j])(args);
 			}
 		}
-	}	
+	}
 }
 
 void measureSpecs(T,alias inferenceMethod=inferTimedOccamSpec)(int numSamples=5000){
@@ -449,6 +450,30 @@ string createAverageTable(Spec[][] allSpecs){
 	return s;
 }
 
+size_t[] getTypeDiagramData(T,string m1,string m2)(){
+	ResultStore s;
+	int actualNumSamples=0;
+	size_t[] r;
+	void addOccamResult(Assignment a,bool c,ref T t){
+		actualNumSamples++;
+		s.addResult(a,c);
+		r~=s.map.length;
+	}
+	inferOccamSpecAdaptive!(s,addOccamResult,T,m1,m2)();
+	return r;
+}
+
+void measureTypeDiagrams(T)(){
+	writeln(prettyDataType(T.stringof));
+	static void action(string m1,string m2)(){ // workaround for buggy DMD
+		writeln(m1," ",m2);
+		auto data=getTypeDiagramData!(T,m1,m2)();
+		foreach(i,x;data) if(!i||i+1==data.length||data[i-1]<data[i]) writeln(i+1,"; ",x);
+	}
+	forallMethodPairs!(T,action)();
+}
+
+
 void performMeasurements(alias measure)(){
 	measure!(Set!int);
 	measure!(Map!(int,int));
@@ -456,44 +481,21 @@ void performMeasurements(alias measure)(){
 	measure!RangeUpdate;
 	measure!(KDTree!int); // "1DTree"
 	// not captured precisely in the fragment
-	enum many=30000;
-	enum more=50000;
 	measure!Accumulator;
 	measure!(MultiSet!int);
-	measure!(UnionFind!("default",false))(many);
-	measure!(UnionFind!("min",false))(many);
-	measure!(UnionFind!("deterministic",false))(more);
-	measure!(UnionFind!"default")(many);
-	measure!(UnionFind!"min")(more);
-	measure!(UnionFind!"deterministic")(more);
-	measure!(ArrayList!int)(600000);	
+	measure!(UnionFind!("default",false))();
+	measure!(UnionFind!("min",false))();
+	measure!(UnionFind!("deterministic",false))();
+	measure!(UnionFind!"default")();
+	measure!(UnionFind!"min")();
+	measure!(UnionFind!"deterministic")();
+	measure!(ArrayList!int)();
 }
-
-void performMeasurements10x(alias measure)(){
-	measure!(Set!int)(50000);
-	measure!(Map!(int,int))(50000);
-	measure!(MaxRegister!int)(50000);
-	measure!RangeUpdate(50000);
-	measure!(KDTree!int)(50000); // "1DTree"
-	// not captured precisely in the fragment
-	enum many=300000;
-	enum more=500000;
-	measure!Accumulator;
-	measure!(MultiSet!int);
-	measure!(UnionFind!("default",false))(many);
-	measure!(UnionFind!("min",false))(many);
-	measure!(UnionFind!("deterministic",false))(more);
-	measure!(UnionFind!"default")(many);
-	measure!(UnionFind!"min")(more);
-	measure!(UnionFind!"deterministic")(more);
-	measure!(ArrayList!int)(6000000);
-}
-
 
 void runExperiments()(){
 	import std.stdio;
 	//writeln(runWithTimeout!({ writeln("finished"); return 0; })(1));
-	//Thread.sleep(5.dur!"seconds");	
+	//Thread.sleep(5.dur!"seconds");
 	// measureSpecs!(UnionFind!("default",true)); // TODO: debug this!
 	Spec[][] allSpecs;
 	foreach(i;0..12){
