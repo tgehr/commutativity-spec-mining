@@ -476,7 +476,8 @@ void measureTypeDiagrams(T)(){
 
 
 void performMeasurements(alias measure)(){
-	measure!(Set!int);
+	measure!LexicographicProximityQuery;
+/+	measure!(Set!int);
 	measure!(Map!(int,int));
 	measure!(MaxRegister!int);
 	measure!RangeUpdate; // maybe imprecise. TODO: figure this out
@@ -499,7 +500,7 @@ void performMeasurements(alias measure)(){
 	measure!(UnionFind!"deterministic")();
 	measure!BitTextEditor;
 	measure!(ArrayList!int)();
-	measure!BitList;
+	measure!BitList;+/
 }
 
 void runExperiments()(){
@@ -508,7 +509,7 @@ void runExperiments()(){
 	//Thread.sleep(5.dur!"seconds");
 	// measureSpecs!(UnionFind!("default",true)); // TODO: debug this!
 	Spec[][] allSpecs;
-	foreach(i;0..12){
+	foreach(i;0..8){
 		specs=[];
 		performMeasurements!measureSpecs();
 		auto tables=createTables(specs);

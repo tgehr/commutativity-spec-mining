@@ -165,8 +165,9 @@ void main(){
 	printSpecs!(SetTest!int,existentialInferenceMethod);+/
 
 	import experiments;
-	//runExperiments();
-	performMeasurements!printSpecs;
+	runExperiments();
+	//writeln(inferOccamSpec!(LexicographicProximityQuery,"insert","nextLarger")(1000000));
+	//performMeasurements!printSpecs;
 	//performMeasurements!measureTypeDiagrams();
 	//runTypeCounting();
 	// captured precisely in the fragment:
