@@ -441,7 +441,7 @@ struct PartialMap{
 	int put(int k,int v){ dom.add(k); return map.put(k,v); }
 	@sampleFrom!("k","dom.elems.keys")
 	//@precondition!("k","dom.contains(k)")
-	int get(int k){ if(!dom.contains(k)) throw new Exception("Out of range"); return map.get(k); }
+	Q!(int,bool) get(int k){ return containsKey(k)?q(map.get(k),true):q(0,false); }
 	bool containsKey(int k){ return dom.contains(k); }
 	void remove(int k){ dom.remove(k); map.elems.remove(k); }
 
@@ -472,8 +472,8 @@ struct Queue{
 		}
 		a[e++%a.length]=x;
 	}
-	int front(){ if(!size()) throw new Exception("No elements."); return a[s%a.length]; }
-	void pop(){ if(!size()) throw new Exception("No elements."); s++; }
+	Q!(int,bool) front(){ return size()?q(a[s%a.length],true):q(0,false); }
+	bool pop(){ if(!size()) return false; s++; return true; }
 
 	Queue clone(){ return Queue(a.dup,s,e); }
 	bool opEquals(Queue r){
@@ -486,8 +486,8 @@ struct Stack{
 	int[] a;
 	int size(){ return cast(int)a.length; }
 	void push(int x){ a~=x; }
-	int top(){ if(!size()) throw new Exception("No elements."); return a[$-1]; }
-	void pop(){ if(!size()) throw new Exception("No elements."); a=a[0..$-1], a.assumeSafeAppend(); }
+	Q!(int,bool) top(){ return size()?q(a[$-1],true):q(0,false); }
+	bool pop(){ if(!size()) return false; a=a[0..$-1], a.assumeSafeAppend(); return true; }
 
 	Stack clone(){ return Stack(a.dup); }
 }
@@ -496,7 +496,7 @@ struct MinHeap{
 	int[] a;
 	int size(){ return cast(int)a.length; }
 	void push(int x){ a~=x; sort!"a>b"(a); }
-	int top(){ if(!size()) throw new Exception("No elements."); return a[$-1]; }
+	Q!(int,bool) top(){ return size()?q(a[$-1],true):q(0,false); }
 	void pop(){ if(!size()) throw new Exception("No elements."); a=a[0..$-1], a.assumeSafeAppend(); }
 
 	MinHeap clone(){ return MinHeap(a.dup); }
