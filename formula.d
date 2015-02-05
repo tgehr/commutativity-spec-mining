@@ -792,6 +792,7 @@ size_t equivClassHash(Formula f,Tuple!(Terminal[],Terminal[]) vbl){
 }
 
 size_t size(Formula f){
+	if(!f) return 0;
 	static struct S{
 		int s=0;
 		void perform(CommutAssocIdemOp o){ s+=o.operands.length-1; }

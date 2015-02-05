@@ -1,6 +1,6 @@
 module mine; // (this module is a huge ugly hack, but it works.)
 import formula, datatypes;
-import util, hashtable;
+import util, hashtable, options;
 import std.traits, std.array, std.algorithm, std.range;
 import std.typecons, std.random, std.math, std.conv;
 
@@ -304,8 +304,6 @@ private:
 	Node r;
 }
 
-enum bool enableSampleSizeReduction=true;
-
 struct EquivAssignment{
 	Assignment a;
 	static if(enableSampleSizeReduction){
@@ -514,7 +512,7 @@ struct ExplorationState(T, string m1, string m2, alias putResult=Void){
 		size_t nrbool=is(ty1[$-1]==bool)+is(ty2[$-1]==bool);
 		Terminal[] terms;
 	}
-	private void handle(T,bool isarg=true)(ref int[] ints,ref bool[] bools,Terminal t){
+	private void handle(T,bool isarg=true)(int methodIndex,ref int[] ints,ref bool[] bools,Terminal t){
 		static if(is(T==bool)){
 			tbools~=t;
 			static if(isarg) bools~=false;
@@ -526,20 +524,24 @@ struct ExplorationState(T, string m1, string m2, alias putResult=Void){
 		}else static if(is(T==void)){
 			// nothing to do
 		}else static if(is(T==Tuple!U,U...)){
-			foreach(i,S;U)
-				handle!(S,isarg)(ints,bools,.t("π_"~to!string(i+1)~"("~t.toString()~")"));
+			foreach(i,S;U){
+				static if(i+1>=U.length||!is(typeof(U[i+1])==string))
+					string name="π"~lowSuffix(i+1)~"("~t.toString()~")";
+				else string name=U[i+1]~lowSuffix(methodIndex);
+				static if(is(S)) handle!(S,isarg)(methodIndex,ints,bools,.t(name));
+			}
 		}else static assert(is(T==void),"unsupported parameter type: "~T.stringof);
 	}
 	@disable this();
 	this(int){
 		t1=[i1,"r"].map!(a=>(a~"₁").t).array;
 		t2=[i2,"r"].map!(a=>(a~"₂").t).array;
-		foreach(i,tt;ty1[0..$-1]) handle!tt(ints1,bools1,t1[i]);
-		foreach(i,tt;ty2[0..$-1]) handle!tt(ints2,bools2,t2[i]);
+		foreach(i,tt;ty1[0..$-1]) handle!tt(1,ints1,bools1,t1[i]);
+		foreach(i,tt;ty2[0..$-1]) handle!tt(2,ints2,bools2,t2[i]);
 		terms=tints~tbools;
 		auto intlen=tints.length, boollen=tbools.length;
-		handle!(ty1[$-1],false)(ints1,bools1,t1[$-1]);
-		handle!(ty2[$-1],false)(ints2,bools2,t2[$-1]);
+		handle!(ty1[$-1],false)(1,ints1,bools1,t1[$-1]);
+		handle!(ty2[$-1],false)(2,ints2,bools2,t2[$-1]);
 		terms~=tints[intlen..$]~tbools[boollen..$];
 		exploration=ExploreStore(split);
 	}
@@ -569,10 +571,12 @@ auto runExplorationWithState(T, string m1, string m2, alias putResult=Void)(Expl
 		for(;i<max;i++){
 			if(!uniform(0,10)) t=T.init;
 			foreach(_;0..uniform(0,10)) modify(t);
-			bool foundAll=false;
-			if(!exploration.foundAll()) exploration.randomlyFindArgs(a);
-			else foundAll=true;
-			if(foundAll||uniform(0,2)){ // try to observe the same class multiple times as well
+			static if(enableTypeAwareSampling){
+				bool random=false;
+				if(!exploration.foundAll()) exploration.randomlyFindArgs(a);
+				else random=true;
+			}else enum random=false;
+			if(random||uniform(0,2)){ // try to observe the same class multiple times as well
 				foreach(ref ar;a){
 					foreach(ref x;ar.ints)x=construct!int();
 					foreach(ref x;ar.bools)x=construct!bool();

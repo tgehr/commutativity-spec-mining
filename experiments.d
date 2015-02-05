@@ -15,8 +15,9 @@ struct SpecStats{
 	int numClasses;
 	int totNumClasses;
 	TickDuration exploration;
-	TimedSpec greedy[2];
-	TimedSpec exhaustive[2];
+	TimedSpec search;
+	//TimedSpec greedy[2];
+	//TimedSpec exhaustive[2];
 }
 
 enum searchTimeout=10;
@@ -58,36 +59,31 @@ auto inferTimedOccamSpec(T, string m1, string m2)(int numSamples=0, int searchTi
 		actualNumSamples++;
 		s.addResult(a,c);
 	}
-	auto sw=StopWatch(AutoStart.yes);
+	StopWatch swExploration, swSearch;
 	//runExploration!(T,m1,m2,addOccamResult)(numSamples);
-	inferOccamSpecAdaptive!(s,addOccamResult,T,m1,m2)();
-	s=s.maybeToNo();
-	stats.exploration=sw.peek();
+	static auto inferOccamSpecAdaptive(alias s,alias addOccamResult,T,string m1,string m2)(){
+		int numSamples=5000;
+		auto state=ExplorationState!(T,m1,m2,addOccamResult)(0);
+		for(Formula last=null;;numSamples*=2){
+			auto sw=StopWatch(AutoStart.yes);
+			swExploration.start();
+			runExplorationWithState!(T,m1,m2,addOccamResult)(state,numSamples);
+			swExploration.stop();
+			swSearch.start();
+			auto f=buildFormula(s.maybeToNo(),sw.peek());
+			swSearch.stop();
+			if(f&&f is last) return f;
+			last=f;
+		}
+	}
+	stats.search.formula=inferOccamSpecAdaptive!(s,addOccamResult,T,m1,m2)();
+	stats.search.time=swSearch.peek();
+	stats.exploration=swExploration.peek();
 	stats.numSamples=actualNumSamples;
 	stats.numClasses=cast(int)s.map.length;
 	stats.totNumClasses=computeNumClasses(cast(int)s.terms(Type.int_).length)*cast(int)(2^^(s.terms(Type.bool_).length));
-	version(VERY_VERBOSE) writeln(bp,"\n",s);
-	//writeln(bp.length," ",bp);
-	// TODO: implement timeouts in a better way!
-	enum tooLargeForExhaustive = [
-		is(T==Map!(int,int)) && m1=="put" && m2=="put" ||
-		is(T==RangeUpdate) && m1=="add2" && m2=="square" ||
-		is(T==KDTree!int) && m1=="add" && m2=="nearest" ||
-		is(T==KDTree!int) && m1=="remove" && m2=="nearest" ||
-		is(T==UnionFind!("deterministic",false)) && m1=="unite" && m2=="unite" ||
-		is(T==UnionFind!("min",true)) && m1=="unite" && m2=="unite" ||
-		is(T==UnionFind!("deterministic",true)) && m1=="unite" && m2=="unite"||
-		is(T==ArrayList!int) && m1=="set" && m2=="set" ||
-		is(T==ArrayList!int) && m1=="lastIndexOf" && m2=="set" ||
-		is(T==ArrayList!int) && m1=="indexOf" && m2=="set",
-		is(T==RangeUpdate) && m1=="add2" && m2=="square"||
-		is(T==UnionFind!("min",true)) && m1=="unite" && m2=="unite"||
-		is(T==UnionFind!("deterministic",true)) && m1=="unite" && m2=="unite"||
-		is(T==ArrayList!int) && m1=="lastIndexOf" && m2=="set"];
-	enum tooLargeForGreedy = [
-		false,
-		false];
-	version(VERBOSE) writeln("greedy w/o");
+	s=s.maybeToNo();
+	/+version(VERBOSE) writeln("greedy w/o");
 	stats.greedy[0]=obtainTimedSpec!((TickDuration timeout){
 		auto bp=extractRelevantBasicPredicates!(incompat,true,true)(s).array;
 		auto f=greedyEquivalentTo(s,bp,timeout);
@@ -116,8 +112,9 @@ auto inferTimedOccamSpec(T, string m1, string m2)(int numSamples=0, int searchTi
 		auto f=minimalEquivalentTo(s,bp,timeout);
 		return f;
 	},tooLargeForExhaustive[1])(searchTimeout);
-	version(VERBOSE) writeln(stats.exhaustive[1].formula);
-	version(VERBOSE) writeln("done");
+	version(VERBOSE) writeln(stats.exhaustive[1].formula);+/
+	version(VERBOSE) writeln(stats.search.formula);
+	// version(VERBOSE) writeln("done");
 	// if(!f) f=s.getFormula();
 	return stats;
 }
@@ -130,12 +127,22 @@ struct Spec{
 
 Spec[] specs;
 
+int maxDisjunctSize(Formula f){
+	auto r=0;
+	foreach(d;f.disjuncts) r=max(r,cast(int)d.size());
+	return r;
+}
+
 struct TimedSpecSummary{
+	int maxSize;
+	int maxDisjunctSize;
 	int total;
 	int number;
 	TickDuration time;
 
 	void add(TimedSpec r){
+		maxSize=max(maxSize,cast(int)r.formula.size());
+		maxDisjunctSize=r.formula.maxDisjunctSize();
 		total++;
 		if(r.timedOut) return;
 		number++;
@@ -143,10 +150,30 @@ struct TimedSpecSummary{
 	}
 
 	void add(TimedSpecSummary r){
+		maxSize=max(maxSize,r.maxSize);
+		maxDisjunctSize=max(maxDisjunctSize,r.maxDisjunctSize);
 		total+=r.total;
 		number+=r.number;
 		time+=r.time;
 	}
+
+	void maxOut(TimedSpec r){
+		maxSize=max(maxSize,cast(int)r.formula.size());
+		maxDisjunctSize=max(maxDisjunctSize,r.formula.maxDisjunctSize());
+		total++;
+		if(r.timedOut) return;
+		number++;
+		time=max(time,r.time);
+	}
+
+	void maxOut(TimedSpecSummary r){
+		maxSize=max(maxSize,r.maxSize);
+		maxDisjunctSize=max(maxDisjunctSize,r.maxDisjunctSize);
+		total+=r.total;
+		number+=r.number;
+		time=max(time,r.time);
+	}
+
 
 	void addTo(ref TickDuration td){
 		td+=time;
@@ -167,18 +194,20 @@ struct SpecSummary{
 	int numClasses;
 	int totNumClasses;
 	TickDuration exploration;
-	TimedSpecSummary greedy[2];
-	TimedSpecSummary exhaustive[2];
+	TimedSpecSummary search;
+	//TimedSpecSummary greedy[2];
+	//TimedSpecSummary exhaustive[2];
 	void add(SpecStats r){
 		numStats++;
 		numSamples+=r.numSamples;
 		numClasses+=r.numClasses;
 		totNumClasses+=r.totNumClasses;
 		exploration+=r.exploration;
-		foreach(i;0..2){
+		search.add(r.search);
+		/+foreach(i;0..2){
 			greedy[i].add(r.greedy[i]);
 			exhaustive[i].add(r.exhaustive[i]);
-		}
+		}+/
 	}
 	void add(SpecSummary r){
 		numStats+=r.numStats;
@@ -186,17 +215,50 @@ struct SpecSummary{
 		numClasses+=r.numClasses;
 		totNumClasses+=r.totNumClasses;
 		exploration+=r.exploration;
-		foreach(i;0..2){
+		search.add(r.search);
+		/+foreach(i;0..2){
 			greedy[i].add(r.greedy[i]);
 			exhaustive[i].add(r.exhaustive[i]);
-		}
+		}+/
 	}
+
+	void maxOut(SpecStats r){
+		numStats++;
+		numSamples=max(numSamples,r.numSamples);
+		if(numClasses<r.numClasses){
+			numClasses=r.numClasses;
+			totNumClasses=r.totNumClasses;
+		}
+		exploration=max(exploration,r.exploration);
+		search.maxOut(r.search);
+		/+foreach(i;0..2){
+			greedy[i].add(r.greedy[i]);
+			exhaustive[i].add(r.exhaustive[i]);
+		}+/
+	}
+	void maxOut(SpecSummary r){
+		numStats+=r.numStats;
+		numSamples=max(numSamples,r.numSamples);
+		if(numClasses<r.numClasses){
+			numClasses=r.numClasses;
+			totNumClasses=r.totNumClasses;
+		}
+		exploration=max(exploration,r.exploration);
+		search.maxOut(r.search);
+		/+foreach(i;0..2){
+			greedy[i].add(r.greedy[i]);
+			exhaustive[i].add(r.exhaustive[i]);
+		}+/
+	}
+
+
 	void addTo(ref TickDuration td){
 		td+=exploration;
-		foreach(i;0..2){
+		search.addTo(td);
+		/+foreach(i;0..2){
 			greedy[i].addTo(td);
 			exhaustive[i].addTo(td);
-		}
+		}+/
 	}
 	void divBy(int x){
 		assert(!(numStats%x));
@@ -206,10 +268,11 @@ struct SpecSummary{
 		assert(!(totNumClasses%x));
 		totNumClasses/=x;
 		exploration/=x;
-		foreach(i;0..2){
+		search.divBy(x);
+		/+foreach(i;0..2){
 			greedy[i].divBy(x);
 			exhaustive[i].divBy(x);
-		}
+		}+/
 	}
 }
 
@@ -303,13 +366,10 @@ string escape(string s){
 
 string[2] createTables(Spec[] specs){
 	string t,s;
-	t~=`\begin{tabular}{|l|l||l|l|l|l|l|l|l|}`~"\n";
-	t~=`Type & Methods & \#Samples & \#Classes & Sampling & \multicolumn{2}{|c|}{Exhaustive} & \multicolumn{2}{|c|}{Greedy} \\\hline`~"\n";
-
-	s~=`\begin{tabular}{lrcrcrcrccrccrc}\toprule`~"\n";
-	s~=`Type  & \#Samples & \#Classes & Sampling && \multicolumn{4}{c}{Exhaustive} && \multicolumn{4}{c}{Greedy} \\`~"\n";
-	s~=`\cmidrule{6-9} \cmidrule{11-14}`~"\n";
-	s~=`      &           &           &          && \multicolumn{2}{c}{w/o pred. discovery} & \multicolumn{2}{c}{w. pred. discovery} && \multicolumn{2}{c}{w/o pred. discovery} & \multicolumn{2}{c}{w. pred. discovery} \\\midrule`~"\n";
+	foreach(ref tbl;Seq!(t,s)){
+		t~=`\begin{tabular}{lccrcrrr}\toprule`~"\n";
+		t~=`{\bf Data structure} & {\bf Methods} & {\bf Size} & {\bf Disj.} & {\bf \#Samples} & {\bf \#Types} & {\bf Sampling} & {\bf Search} \\\midrule`~"\n";
+	}
 	string formatTime(TickDuration time){
 		if(to!Duration(time)>=1.dur!"seconds") return text(time.to!("seconds",double).sigFig(2),"s");
 		return text(time.to!("msecs",double).sigFig(2),"ms");
@@ -334,14 +394,14 @@ string[2] createTables(Spec[] specs){
 	}
 	SpecSummaryContainer summaries;
 	foreach(spec;specs){
-		t~=text(`\verb|`,prettyDataType(spec.dataType),`|`," & ",spec.m1.escape,"/",spec.m2.escape," & ",
+		t~=text(`\verb|`,prettyDataType(spec.dataType),`|`," & ",
+				spec.m1.escape,"/",spec.m2.escape," & ",
+				spec.stats.search.formula.size()," & ",
+				spec.stats.search.formula.maxDisjunctSize()," & ",
 				spec.stats.numSamples," & ",
 				spec.stats.numClasses,"/",spec.stats.totNumClasses," & ",
 				formatTime(spec.stats.exploration)," & ",
-				formatTimedSpec(spec.stats.exhaustive[0])," & ",
-				formatTimedSpec(spec.stats.exhaustive[1])," & ",
-				formatTimedSpec(spec.stats.greedy[0])," & ",
-				formatTimedSpec(spec.stats.greedy[1]));
+				formatTimedSpec(spec.stats.search));
 		t~=`\\`~"\n";
 		if(spec.dataType !in summaries) summaries[spec.dataType]=SpecSummary.init;
 		summaries[spec.dataType].add(spec.stats);
@@ -349,32 +409,29 @@ string[2] createTables(Spec[] specs){
 	foreach(i,name;summaries.names){
 		auto spec=summaries.summaries[i];
 		s~=text(`\verb|`,prettyDataType(name),`|`," & ",
+				spec.search.total," & ",
+				spec.search.maxSize," & ",
+				spec.search.maxDisjunctSize," & ",
 				spec.numSamples," & ",
 				spec.numClasses,"/",spec.totNumClasses," & ",
-				formatTime(spec.exploration)," && ",
-				formatTime(spec.exhaustive[0].time),spec.exhaustive[0].number<spec.exhaustive[0].total?"*":"",
-				"& (",spec.exhaustive[0].number,"/",spec.exhaustive[0].total,") && ",
-				formatTime(spec.exhaustive[1].time),spec.exhaustive[1].number<spec.exhaustive[1].total?"*":"",
-				"& (",spec.exhaustive[1].number,"/",spec.exhaustive[1].total,") && ",
-				formatTime(spec.greedy[0].time),spec.greedy[0].number<spec.greedy[0].total?"*":"",
-				"& (",spec.greedy[0].number,"/",spec.greedy[0].total,") && ",
-				formatTime(spec.greedy[1].time),spec.greedy[1].number<spec.greedy[1].total?"*":"",
-				"& (",spec.greedy[1].number,"/",spec.greedy[1].total,")");
+				formatTime(spec.exploration)," & ",
+				formatTime(spec.search.time),spec.search.number<spec.search.total?"*":"");
 		s~=`\\`~"\n";
 	}
+	t~=`\bottomrule`~"\n";
 	t~=`\end{tabular}`~"\n";
 	s~=`\bottomrule`~"\n";
 	s~=`\end{tabular}`~"\n";
 	return [t,s];
 }
 
-string createAverageTable(Spec[][] allSpecs){
-	string s;
-	s~=`     {\small\begin{tabular}{lrcrcrcrccrcrc}\toprule`~"\n";
-	s~=`         {\bf Data structure} & {\bf \#Samples} & {\bf \#Types} & {\bf Samp.} & {\bf Pairs} & \multicolumn{4}{c}{{\bf Exhaustive}}      &                                          & \multicolumn{4}{c}{{\bf Greedy}}                                                            \\`~"\n";
-	s~=`         \cmidrule{6-9} \cmidrule{11-14}`~"\n";
-	s~=`                              &                 &               & \multicolumn{1}{c}{{\bf time}} &             & \multicolumn{2}{c}{{\bf w/o pred. disc.}} & \multicolumn{2}{c}{{\bf w. pred. disc.}} &      & \multicolumn{2}{c}{{\bf w/o pred. disc.}} & \multicolumn{2}{c}{{\bf w. pred. disc.}} \\`~"\n";
-	s~=`         \midrule`~"\n";
+string[2] createAverageAndMaxTables(Spec[][] allSpecs){
+	string s,t;
+	foreach(ref tbl;Seq!(t,s)){
+		t~=`\begin{tabular}{lccrcrrr}\toprule`~"\n";
+		t~=`{\bf Data structure} & {\bf Pairs} & {\bf Size} & {\bf Disj.} & {\bf \#Samples} & {\bf \#Types} & {\bf Sampling} & {\bf Search} \\\midrule`~"\n";
+	}
+
 	string formatTime(TickDuration time){
 		if(to!Duration(time)>=1.dur!"seconds") return text(time.to!("seconds",double).sigFig(2),"s");
 		return text(time.to!("msecs",double).sigFig(2)/+,"ms"+/);
@@ -384,7 +441,7 @@ string createAverageTable(Spec[][] allSpecs){
 		return formatTime(spec.time);
 	}
 	string thousandSeparate(int x){
-		if((x<0?-x:x)>=1000) return thousandSeparate(x/1000)~" "~to!string(x%1000);
+		if((x<0?-x:x)>=1000) return thousandSeparate(x/1000)~" "~to!string(1000+x%1000)[1..$];
 		return to!string(x);
 	}
 	struct SpecSummaryContainer{
@@ -402,38 +459,42 @@ string createAverageTable(Spec[][] allSpecs){
 		}
 	}
 	auto summaries=new SpecSummaryContainer[](allSpecs.length);
+	auto maxmaries=new SpecSummaryContainer[](allSpecs.length);
 	foreach(i,specs;allSpecs){
 		foreach(spec;specs){
 			if(spec.dataType !in summaries[i]) summaries[i][spec.dataType]=SpecSummary.init;
 			summaries[i][spec.dataType].add(spec.stats);
+			maxmaries[i][spec.dataType].maxOut(spec.stats);
 		}
 	}
 	auto totalTime=new TickDuration[](allSpecs.length);
-	foreach(i,name;summaries[0].names){
-		SpecSummary spec;
-		foreach(k;0..summaries.length){
-			spec.add(summaries[k].summaries[i]);
-			summaries[k].summaries[i].addTo(totalTime[k]);
+	foreach(which,ref tbl;Seq!(s,t)){
+		static if(which) alias maries=maxmaries;
+		else alias maries=summaries;
+		foreach(i,name;maries[0].names){
+			SpecSummary spec;
+			foreach(k;0..maries.length){
+				spec.add(maries[k].summaries[i]);
+				maries[k].summaries[i].addTo(totalTime[k]);
+			}
+			spec.divBy(cast(int)maries.length);
+			assert(spec.search.total==spec.numStats);
+			tbl~=text(`\verb|`,prettyDataType(name),`|`," & ",
+					spec.numStats," & ",
+					spec.search.maxSize," & ",
+					spec.search.maxDisjunctSize," & ",
+					thousandSeparate(spec.numSamples)," & ",
+					spec.numClasses,"/",spec.totNumClasses," & ",
+					formatTime(spec.exploration)," & ",
+					formatTime(spec.search.time),spec.search.number<spec.search.total?"*":"");
+			tbl~=`\\`~"\n";
+			// if(i==4) s~="\\midrule\n";
 		}
-		spec.divBy(cast(int)summaries.length);
-		s~=text(`\verb|`,prettyDataType(name),`|`," & ",
-				thousandSeparate(spec.numSamples)," & ",
-				spec.numClasses,"/",spec.totNumClasses," & ",
-				formatTime(spec.exploration)," & ",
-				spec.numStats," & ",
-				formatTime(spec.exhaustive[0].time),spec.exhaustive[0].number<spec.exhaustive[0].total?"*":"",
-				" & ",spec.exhaustive[0].number," & ",
-				formatTime(spec.exhaustive[1].time),spec.exhaustive[1].number<spec.exhaustive[1].total?"*":"",
-				" & ",spec.exhaustive[1].number," && ",
-				formatTime(spec.greedy[0].time),spec.greedy[0].number<spec.greedy[0].total?"*":"",
-				" & ",spec.greedy[0].number," & ",
-				formatTime(spec.greedy[1].time),spec.greedy[1].number<spec.greedy[1].total?"*":"",
-				" & ",spec.greedy[1].number);
-		s~=`\\`~"\n";
-		if(i==4) s~="\\midrule\n";
 	}
 	s~=`\bottomrule`~"\n";
 	s~=`\end{tabular}`~"\n";
+	t~=`\bottomrule`~"\n";
+	t~=`\end{tabular}`~"\n";
 	TickDuration average=0;
 	foreach(i;0..allSpecs.length)
 		average+=totalTime[i];
@@ -447,7 +508,7 @@ string createAverageTable(Spec[][] allSpecs){
 	s~=text("variance of total time: ",variance,"ms^2")~"\n";
 	import std.math;
 	s~=text("std.dev. of total time: ",sqrt(variance),"ms")~"\n";
-	return s;
+	return [s,t];
 }
 
 size_t[] getTypeDiagramData(T,string m1,string m2)(){
@@ -456,8 +517,11 @@ size_t[] getTypeDiagramData(T,string m1,string m2)(){
 	size_t[] r;
 	void addOccamResult(Assignment a,bool c,ref T t){
 		actualNumSamples++;
+		auto old=s.map.length;
 		s.addResult(a,c);
 		r~=s.map.length;
+		/+if(old!=s.map.length&&s.map.length>1400)
+			writeln(s.map.length);+/
 	}
 	inferOccamSpecAdaptive!(s,addOccamResult,T,m1,m2)();
 	return r;
@@ -475,20 +539,18 @@ void measureTypeDiagrams(T)(){
 
 
 void performMeasurements(alias measure)(){
-	// measure!LexicographicProximityQuery;
 	measure!(Set!int);
 	measure!(Map!(int,int));
 	measure!(MaxRegister!int);
-	measure!RangeUpdate; // maybe imprecise. TODO: figure this out
 	measure!(KDTree!int); // "1DTree"
 	// not captured precisely in the fragment
 	measure!(IntProximityQuery); // maybe precise. TODO: figure this out
+	measure!RangeUpdate; // maybe precise. TODO: figure this out
 	measure!Accumulator;
 	measure!IntCell;
-	/+measure!Queue; // TODO: exceptions are slow, do this some other way?
-	measure!Stack; // TODO: ditto
-	measure!MinHeap; // TODO: ditto+/
-	//measure!LexicographicProximityQuery; // TODO: why is this so hard?
+	measure!Queue;
+	measure!Stack;
+	measure!MinHeap;
 	measure!(MultiSet!int);
 	measure!(PartialMap); // TODO: why is put/size spec wrong consistently?
 	measure!(UnionFind!("default",false))();
@@ -500,10 +562,13 @@ void performMeasurements(alias measure)(){
 	measure!BitTextEditor;
 	measure!(ArrayList!int)();
 	measure!BitList;
+	// measure!LexicographicProximityQuery; // TODO: why is this so hard?+/
 }
 
+enum datetag=(__DATE__~__TIME__).filter!(c=>c!=' '&&c!='\t'&&c!=':').to!string;
+import options;
 void runExperiments()(){
-	import std.stdio;
+	static if(manualOutputRedirect) f=File("results"~datetag~".txt","w");
 	//writeln(runWithTimeout!({ writeln("finished"); return 0; })(1));
 	//Thread.sleep(5.dur!"seconds");
 	// measureSpecs!(UnionFind!("default",true)); // TODO: debug this!
@@ -521,8 +586,11 @@ void runExperiments()(){
 		allSpecs~=specs;
 		//writeln(inferTimedOccamSpec!(ArrayList!int,"indexOf","set")(600000));
 	}
+	auto avgmax=createAverageAndMaxTables(allSpecs);
 	writeln("average:");
-	writeln(createAverageTable(allSpecs));
+	writeln(avgmax[0]);
+	writeln("maximum:");
+	writeln(avgmax[1]);
 }
 
 void countTypes(T, string m1, string m2)(int numSamples=5000, int searchTimeout=searchTimeout){
@@ -610,13 +678,15 @@ void countTypes(T, string m1, string m2)(int numSamples=5000, int searchTimeout=
 	//writeln(counts);
 }
 
-/+File f;
-void writeln(T...)(T args){ // wtf? why doesn't tee work?
-	f.writeln(args);
-	std.stdio.writeln(args);
-	f.flush();
+static if(manualOutputRedirect){
+	File f;
+	void writeln(T...)(T args){ // wtf? why doesn't tee work?
+		f.writeln(args);
+		std.stdio.writeln(args);
+		f.flush();
+	}
 }
-
+/+
 void runTypeCounting(){
 	f=File("robustness_tests.txt","w");
 	static void countAllTypes(T,alias inferenceMethod=inferTimedOccamSpec)(int numSamples=5000){

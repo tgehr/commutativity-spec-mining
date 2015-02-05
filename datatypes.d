@@ -96,7 +96,10 @@ int construct(T)(int lower=int.min,int upper=int.max)if(is(T==int)){
 		if(values.length&&!uniform(0,10)) return values[uniform(0,$)];
 	}
 	if(values.length>100){ values.length=0; values.assumeSafeAppend(); }
-	values~=uniform!"[)"(max(lower,-100),min(upper,101));
+	//enum low=-100,up=100;
+	import options;
+	enum low=intSamplingRange[0],up=intSamplingRange[1]; // !!!
+	values~=uniform!"[)"(max(lower,low),min(upper,up+1));
 	return values[$-1];
 }
 bool construct(T)()if(is(T==bool)){ return !!uniform(0,2); }
@@ -441,7 +444,11 @@ struct PartialMap{
 	int put(int k,int v){ dom.add(k); return map.put(k,v); }
 	@sampleFrom!("k","dom.elems.keys")
 	//@precondition!("k","dom.contains(k)")
-	Q!(int,bool) get(int k){ return containsKey(k)?q(map.get(k),true):q(0,false); }
+	Q!(int,"r",bool,"s") get(int k){
+		return containsKey(k)?
+			Q!(int,"r",bool,"s")(map.get(k),true):
+			Q!(int,"r",bool,"s")(0,false);
+	}
 	bool containsKey(int k){ return dom.contains(k); }
 	void remove(int k){ dom.remove(k); map.elems.remove(k); }
 
@@ -458,27 +465,25 @@ struct PartialMap{
 
 import std.range;
 ////////////////////////////////////////////////////
-
+import std.container;
 struct Queue{
-	int[] a;
-	int s=0,e=0;
-	int size(){ return e-s; }
+	DList!int list;
+	int l=0;
+	int size(){ return l; }
 	void push(int x){
-		if(!a.length) a=[0,0];
-		if(e%a.length==s%a.length){
-			auto b=iota(s,e).map!(i=>a[i%a.length]).array;
-			b.length=2*a.length;
-			a=b,e=e-s,s=0;
-		}
-		a[e++%a.length]=x;
+		list.insertBack(x);
+		l++;
 	}
-	Q!(int,bool) front(){ return size()?q(a[s%a.length],true):q(0,false); }
-	bool pop(){ if(!size()) return false; s++; return true; }
+	Q!(int,"r",bool,"s") front(){
+		return size()?
+			Q!(int,"r",bool,"s")(list.front,true):
+			Q!(int,"r",bool,"s")(0,false);
+	}
+	bool pop(){ if(!size()) return false; l--; list.removeFront(); return true; }
 
-	Queue clone(){ return Queue(a.dup,s,e); }
+	Queue clone(){ return Queue(list.dup,l); }
 	bool opEquals(Queue r){
-		return equal(iota(s,e).map!(i=>a[i%a.length]),
-					 iota(r.s,r.e).map!(i=>r.a[i%r.a.length]));
+		return equal(list[],r.list[]);
 	}
 }
 
@@ -486,7 +491,11 @@ struct Stack{
 	int[] a;
 	int size(){ return cast(int)a.length; }
 	void push(int x){ a~=x; }
-	Q!(int,bool) top(){ return size()?q(a[$-1],true):q(0,false); }
+	Q!(int,"r",bool,"s") top(){
+		return size()?
+			Q!(int,"r",bool,"s")(a[$-1],true):
+			Q!(int,"r",bool,"s")(0,false);
+	}
 	bool pop(){ if(!size()) return false; a=a[0..$-1], a.assumeSafeAppend(); return true; }
 
 	Stack clone(){ return Stack(a.dup); }
@@ -496,13 +505,17 @@ struct MinHeap{
 	int[] a;
 	int size(){ return cast(int)a.length; }
 	void push(int x){ a~=x; sort!"a>b"(a); }
-	Q!(int,bool) top(){ return size()?q(a[$-1],true):q(0,false); }
-	void pop(){ if(!size()) throw new Exception("No elements."); a=a[0..$-1], a.assumeSafeAppend(); }
+	Q!(int,"r",bool,"s") top(){
+		return size()?
+			Q!(int,"r",bool,"s")(a[$-1],true):
+			Q!(int,"r",bool,"s")(0,false);
+	}
+	bool pop(){ if(!size()) return false; a=a[0..$-1], a.assumeSafeAppend(); return true; }
 
 	MinHeap clone(){ return MinHeap(a.dup); }
 }
 
-import std.typecons : q=tuple, Q=Tuple;
+import std.typecons : Q=Tuple, q=tuple;
 struct LexicographicProximityQuery{
 	Q!(int,int)[] elems;
 	void insert(int a,int b){
@@ -519,13 +532,13 @@ struct LexicographicProximityQuery{
 			break;
 		}
 	}
-	Q!(int,int) nextLarger(int a,int b){
-		auto x=q(a,b), m=x;
+	Q!(int,"c",int,"d") nextLarger(int a,int b){
+		Q!(int,"c",int,"d") x=q(a,b), m=x;
 		foreach(e;elems) if(e>x&&(m==x||m>e)) m=e;
 		return m;
 	}
-	Q!(int,int) nextSmaller(int a,int b){
-		auto x=q(a,b), m=x;
+	Q!(int,"c",int,"d") nextSmaller(int a,int b){
+		Q!(int,"c",int,"d") x=q(a,b), m=x;
 		foreach(e;elems) if(e<x&&(m==x||m<e)) m=e;
 		return m;
 	}

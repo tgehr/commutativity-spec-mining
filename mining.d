@@ -15,6 +15,21 @@ void printSpecs(T,alias inferenceMethod=defaultInferenceMethod)(int numSamples=0
 	bool dontConsider(string s){
 		return s=="toString"||s=="clone"||s=="opEquals";
 	}
+	string formatReturnType(T)(int methodIndex){
+		import std.typecons : Q=Tuple;
+		static if(is(T==void)) return "()";
+		else static if(is(T==Q!U,U...)){
+			string s="(";
+			int n=0;
+			foreach(i,S;U){
+				static if(i+1>=U.length||!is(typeof(U[i+1])==string))
+					string name="π"~lowSuffix(i+1)~"(r"~lowSuffix(methodIndex)~")";
+				else string name=U[i+1]~lowSuffix(methodIndex);
+				if(is(S)){ if(n++) s~=","; s~=name; }
+			}
+			s~=")"; return s;
+		}else return "r₁";
+	}
 	foreach(i,_;m){
 		foreach(j,__;m){
 			static if(!(j<i||dontConsider(m[i])||dontConsider(m[j]))){
@@ -25,8 +40,8 @@ void printSpecs(T,alias inferenceMethod=defaultInferenceMethod)(int numSamples=0
 					alias i2=Seq!(ParameterIdentifierTuple!m2a);
 					auto t1=(cast(string[])[i1]).map!(a=>(a~"₁")).array;
 					auto t2=(cast(string[])[i2]).map!(a=>(a~"₂")).array;
-					bool v1=is(ReturnType!m1a==void), v2=is(ReturnType!m2a==void);
-					write("φ(",m[i],"(",t1.join(","),")/",v1?"()":"r₁",", ",m[j],"(",t2.join(","),")/",v2?"()":"r₂","): ");
+					string r1=formatReturnType!(ReturnType!m1a)(1), r2=formatReturnType!(ReturnType!m2a)(2);
+					write("φ(",m[i],"(",t1.join(","),")/",r1,", ",m[j],"(",t2.join(","),")/",r2,"): ");
 					stdout.flush();
 					auto spec=inferenceMethod!(T,m[i],m[j])(numSamples);
 					//writeln("φ(",m[i],"(",t1.join(","),")/r₁, ",m[j],"(",t2.join(","),")/r₂): ",spec);

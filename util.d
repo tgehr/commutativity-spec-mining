@@ -61,3 +61,8 @@ struct OrderedPartition{
 	int[][] p;
 }
 
+/+enum lowSuffix=(delegate string(int i)=>
+				(i>10?__traits(parent,{})(i/10):"")
+				~ text("₀₁₂₃₄₅₆₇₈₉"d[i%10]));+/
+
+string lowSuffix(int i){ return (i>10?lowSuffix(i/10):"") ~ text("₀₁₂₃₄₅₆₇₈₉"d[i%10]); }

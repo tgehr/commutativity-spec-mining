@@ -5,11 +5,12 @@ import hashtable;
 
 
 enum bool disablePredicateDiscovery=false;
-private auto buildFormula(ResultStore t,TickDuration timeout=TickDuration(0)){
+auto buildFormula(ResultStore t,TickDuration timeout=TickDuration(0)){
 	version(VERBOSE) writeln("inferring formula...");
 	auto bp=extractRelevantBasicPredicates!(incompat,true,disablePredicateDiscovery)(t).array;
 	version(VERY_VERBOSE) writeln(bp,"\n",t);
 	//writeln(bp.length," ",bp);
+	//auto f=greedyEquivalentTo(t,bp,timeout);
 	auto f=greedyEquivalentTo(t,bp,timeout);
 	f=f.factorGreedily();
 	//auto f=minimalEquivalentTo(t,bp);
@@ -33,7 +34,10 @@ auto inferOccamSpecAdaptive(alias s,alias addOccamResult,T,string m1,string m2)(
 		auto sw=StopWatch(AutoStart.yes);
 		runExplorationWithState!(T,m1,m2,addOccamResult)(state,numSamples);
 		auto f=buildFormula(s.maybeToNo(),sw.peek());
+		//writeln(f);
+		//static if(m1!="put"||m2!="put"){
 		if(f&&f is last) return f;
+		//}else if(f&&f is last&&f.size()>1) return f;
 		last=f;
 	}
 }
@@ -66,14 +70,11 @@ auto inferExistentialOccamSpec(T, string m1, string m2, methods...)(int numSampl
 		alias method=ID!(mixin("T."~m));
 		static assert(!is(ReturnType!method==void));
 		alias argNames=ParameterIdentifierTuple!method;
-		enum suffix=(delegate string(int i)=>
-					 (i>10?__traits(parent,{})(i/10):"")
-					 ~ text("₀₁₂₃₄₅₆₇₈₉"d[(i+3)%10]))(i);
 		Terminal[] ceterms;
 		foreach(arg;argNames){
 			alias sampler=obtainSamplerFor!(method,arg);
 			static assert(is(typeof({T t;sampler().exhaustive(t);})),"cannot enumerate parameter: "~arg);
-			ceterms~=t(arg~suffix);
+			ceterms~=t(arg~lowSuffix(i+3));
 		}
 		eterms~=ceterms;
 		qterms~=ceterms;
