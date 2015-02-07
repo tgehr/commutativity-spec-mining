@@ -1,13 +1,12 @@
 import std.array, std.algorithm, std.stdio;
 import std.datetime;
-import mine, formula;
+import mine, formula, options;
 import hashtable;
 
 
-enum bool disablePredicateDiscovery=false;
 auto buildFormula(ResultStore t,TickDuration timeout=TickDuration(0)){
 	version(VERBOSE) writeln("inferring formula...");
-	auto bp=extractRelevantBasicPredicates!(incompat,true,disablePredicateDiscovery)(t).array;
+	auto bp=extractRelevantBasicPredicates!(incompat,true,!enablePredicateDiscovery)(t).array;
 	version(VERY_VERBOSE) writeln(bp,"\n",t);
 	//writeln(bp.length," ",bp);
 	//auto f=greedyEquivalentTo(t,bp,timeout);
@@ -34,10 +33,10 @@ auto inferOccamSpecAdaptive(alias s,alias addOccamResult,T,string m1,string m2)(
 		auto sw=StopWatch(AutoStart.yes);
 		runExplorationWithState!(T,m1,m2,addOccamResult)(state,numSamples);
 		auto f=buildFormula(s.maybeToNo(),sw.peek());
-		//writeln(f);
-		//static if(m1!="put"||m2!="put"){
-		if(f&&f is last) return f;
-		//}else if(f&&f is last&&f.size()>1) return f;
+		//static if(!is(T==Map!(int,int))||m1!="put"||m2!="put"){
+		//if(f&&f is last) return f; // TODO: why is search not deterministic?
+		if(f&&last&&f.equivalentOn(last,s)) return f;
+		//}else if(f&&last&&f.equivalentOn(last,s)&&f.size()>=5) return f;
 		last=f;
 	}
 }
