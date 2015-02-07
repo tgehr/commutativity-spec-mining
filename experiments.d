@@ -72,11 +72,28 @@ auto inferTimedOccamSpec(T, string m1, string m2)(int numSamples=0, int searchTi
 			swSearch.start();
 			auto f=buildFormula(s.maybeToNo(),sw.peek());
 			swSearch.stop();
-			if(f&&f is last) return f;
+			//writeln(f," ",numSamples);
+			//if(f&&f is last) return f;
+			//static if(!is(T==Map!(int,int))||m1!="put"||m2!="put"){
+				//if(f&&f is last) return f; // TODO: why is search not deterministic?
+			if(f&&last&&f.equivalentOn(last,s)) return f;
+			//}else{ writeln(f," ",f.size()); if(f&&last&&f.equivalentOn(last,s)&&f.size()>=5) return f; }
 			last=f;
 		}
 	}
-	stats.search.formula=inferOccamSpecAdaptive!(s,addOccamResult,T,m1,m2)();
+	static auto inferOccamSpecCommon(alias s,alias addOccamResult,T,string m1,string m2)(int numSamples){
+		if(!numSamples) return inferOccamSpecAdaptive!(s,addOccamResult,T,m1,m2)();
+		swExploration.start();
+		runExploration!(T,m1,m2,addOccamResult)(numSamples);
+		swExploration.stop();
+		swSearch.start();
+		auto t=s.maybeToNo();
+		auto f=buildFormula(t);
+		if(!f) f=t.getFormula();
+		swSearch.stop();
+		return f;
+	}
+	stats.search.formula=inferOccamSpecCommon!(s,addOccamResult,T,m1,m2)(numSamples);
 	stats.search.time=swSearch.peek();
 	stats.exploration=swExploration.peek();
 	stats.numSamples=actualNumSamples;
@@ -142,7 +159,7 @@ struct TimedSpecSummary{
 
 	void add(TimedSpec r){
 		maxSize=max(maxSize,cast(int)r.formula.size());
-		maxDisjunctSize=r.formula.maxDisjunctSize();
+		maxDisjunctSize=max(maxDisjunctSize,r.formula.maxDisjunctSize());
 		total++;
 		if(r.timedOut) return;
 		number++;
@@ -304,7 +321,7 @@ void forallMethodPairs(T,alias action,A...)(A args){
 	}
 }
 
-void measureSpecs(T,alias inferenceMethod=inferTimedOccamSpec)(int numSamples=5000){
+void measureSpecs(T,alias inferenceMethod=inferTimedOccamSpec)(int numSamples=0){
 	version(VERBOSE) writeln(T.stringof);
 	static void action(string m1,string m2)(int numSamples){ // workaround for buggy DMD
 		alias m1a=ID!(mixin("T."~m1));
@@ -367,8 +384,8 @@ string escape(string s){
 string[2] createTables(Spec[] specs){
 	string t,s;
 	foreach(ref tbl;Seq!(t,s)){
-		t~=`\begin{tabular}{lccrcrrr}\toprule`~"\n";
-		t~=`{\bf Data structure} & {\bf Methods} & {\bf Size} & {\bf Disj.} & {\bf \#Samples} & {\bf \#Types} & {\bf Sampling} & {\bf Search} \\\midrule`~"\n";
+		tbl~=`\begin{tabular}{lcccrcrr}\toprule`~"\n";
+		tbl~=`{\bf Data structure} & {\bf Methods} & {\bf Size} & {\bf Disj.} & {\bf \#Samples} & {\bf \#Types} & {\bf Sampling} & {\bf Search} \\\midrule`~"\n";
 	}
 	string formatTime(TickDuration time){
 		if(to!Duration(time)>=1.dur!"seconds") return text(time.to!("seconds",double).sigFig(2),"s");
@@ -428,8 +445,8 @@ string[2] createTables(Spec[] specs){
 string[2] createAverageAndMaxTables(Spec[][] allSpecs){
 	string s,t;
 	foreach(ref tbl;Seq!(t,s)){
-		t~=`\begin{tabular}{lccrcrrr}\toprule`~"\n";
-		t~=`{\bf Data structure} & {\bf Pairs} & {\bf Size} & {\bf Disj.} & {\bf \#Samples} & {\bf \#Types} & {\bf Sampling} & {\bf Search} \\\midrule`~"\n";
+		tbl~=`\begin{tabular}{lcccrcrr}\toprule`~"\n";
+		tbl~=`{\bf Data structure} & {\bf Pairs} & {\bf Size} & {\bf Disj.} & {\bf \#Samples} & {\bf \#Types} & {\bf Sampling} & {\bf Search} \\\midrule`~"\n";
 	}
 
 	string formatTime(TickDuration time){
@@ -475,7 +492,7 @@ string[2] createAverageAndMaxTables(Spec[][] allSpecs){
 			SpecSummary spec;
 			foreach(k;0..maries.length){
 				spec.add(maries[k].summaries[i]);
-				maries[k].summaries[i].addTo(totalTime[k]);
+				static if(which) maries[k].summaries[i].addTo(totalTime[k]);
 			}
 			spec.divBy(cast(int)maries.length);
 			assert(spec.search.total==spec.numStats);
@@ -542,7 +559,7 @@ void performMeasurements(alias measure)(){
 	measure!(Set!int);
 	measure!(Map!(int,int));
 	measure!(MaxRegister!int);
-	measure!(KDTree!int); // "1DTree"
+	// measure!(KDTree!int); // "1DTree"
 	// not captured precisely in the fragment
 	measure!(IntProximityQuery); // maybe precise. TODO: figure this out
 	measure!RangeUpdate; // maybe precise. TODO: figure this out
@@ -552,8 +569,8 @@ void performMeasurements(alias measure)(){
 	measure!Stack;
 	measure!MinHeap;
 	measure!(MultiSet!int);
-	measure!(PartialMap); // TODO: why is put/size spec wrong consistently?
-	measure!(UnionFind!("default",false))();
+	//measure!(PartialMap); // TODO: why is put/size spec wrong consistently?
+	/+measure!(UnionFind!("default",false))();
 	measure!(UnionFind!("min",false))();
 	measure!(UnionFind!("deterministic",false))();
 	measure!(UnionFind!"default")();
@@ -561,8 +578,8 @@ void performMeasurements(alias measure)(){
 	measure!(UnionFind!"deterministic")();
 	measure!BitTextEditor;
 	measure!(ArrayList!int)();
-	measure!BitList;
-	// measure!LexicographicProximityQuery; // TODO: why is this so hard?+/
+	measure!BitList;+/
+	//measure!LexicographicProximityQuery(100000000); // TODO: why is this so hard?+/
 }
 
 enum datetag=(__DATE__~__TIME__).filter!(c=>c!=' '&&c!='\t'&&c!=':').to!string;
@@ -683,6 +700,11 @@ static if(manualOutputRedirect){
 	void writeln(T...)(T args){ // wtf? why doesn't tee work?
 		f.writeln(args);
 		std.stdio.writeln(args);
+		f.flush();
+	}
+	void write(T...)(T args){
+		f.write(args);
+		std.stdio.write(args);
 		f.flush();
 	}
 }

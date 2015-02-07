@@ -541,6 +541,8 @@ struct ExplorationState(T, string m1, string m2, alias putResult=Void){
 		terms=tints~tbools;
 		auto intlen=tints.length, boollen=tbools.length;
 		handle!(ty1[$-1],false)(1,ints1,bools1,t1[$-1]);
+		terms~=tints[intlen..$]~tbools[boollen..$];
+		intlen=tints.length, boollen=tbools.length;
 		handle!(ty2[$-1],false)(2,ints2,bools2,t2[$-1]);
 		terms~=tints[intlen..$]~tbools[boollen..$];
 		exploration=ExploreStore(split);

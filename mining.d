@@ -28,7 +28,7 @@ void printSpecs(T,alias inferenceMethod=defaultInferenceMethod)(int numSamples=0
 				if(is(S)){ if(n++) s~=","; s~=name; }
 			}
 			s~=")"; return s;
-		}else return "r₁";
+		}else return "r"~lowSuffix(methodIndex);
 	}
 	foreach(i,_;m){
 		foreach(j,__;m){
@@ -181,7 +181,10 @@ void main(){
 
 	import experiments;
 	runExperiments();
+	//writeln(inferOccamSpec!(Set!int,"add","size"));
 	//writeln(inferOccamSpec!(LexicographicProximityQuery,"insert","nextLarger")(1000000));
+	//writeln(t.doCommute!("findFirst","shiftBlock")([MethodArgs([],[1]),MethodArgs([2,5])],res));
+	//writeln(inferOccamSpec!(BitList,"findClosest","shiftBlock"));
 	//performMeasurements!printSpecs;
 	//performMeasurements!measureTypeDiagrams();
 	//runTypeCounting();
