@@ -574,6 +574,7 @@ struct BitList{
 	int findFirst(bool x){ foreach(i,b;a) if(b==x) return cast(int)i; return -1; }
 	int findLast(bool x){ foreach_reverse(i,b;a) if(b==x) return cast(int)i; return -1; }
 	void toggleFirst(bool x){ auto i=findFirst(x); if(~i) a[i]=!a[i]; }
+	@bounded!("i","0","cast(int)a.length")
 	int findClosest(int i,bool x){
 		foreach(k;0..max(i+1,a.length-i)){
 			if(i>=k&&a[i-k]==x) return cast(int)(i-k);
@@ -581,6 +582,7 @@ struct BitList{
 		}
 		return -1;
 	}
+	@bounded!("i","0","cast(int)a.length")
 	void toggleClosest(int i,bool x){ auto j=findClosest(i,x); if(~j) a[j]=!a[j]; }
 	void sort(){ .sort(a); }
 	@bounded!("s","0","cast(int)a.length")
@@ -596,7 +598,14 @@ struct BitList{
 	@bounded!("s","0","cast(int)a.length")
 	@bounded!("e","0","cast(int)a.length+1")
 	void shiftBlock(int s,int e){
-		foreach(i;s..e) swap(a[i],a[(i-s+1)%(e-s)+s]);
+		/+foreach(i;s..e){
+			swap(a[i],a[(i-s+1)%(e-s)+s]);
+			//import std.stdio;writeln(a);
+		}+/
+		foreach(i;s..e-1){
+			swap(a[i],a[i+1]);
+			//import std.stdio;writeln(a);
+		}
 	}
 	auto clone(){ return BitList(a.dup); }
 }
