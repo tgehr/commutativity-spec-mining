@@ -74,10 +74,10 @@ auto inferTimedOccamSpec(T, string m1, string m2)(int numSamples=0, int searchTi
 			swSearch.stop();
 			//writeln(f," ",numSamples);
 			//if(f&&f is last) return f;
-			//static if(!is(T==Map!(int,int))||m1!="put"||m2!="put"){
+			static if(!is(T==PartialMap)||m1!="put"||m2!="put"){
 				//if(f&&f is last) return f; // TODO: why is search not deterministic?
-			if(f&&last&&f.equivalentOn(last,s)) return f;
-			//}else{ writeln(f," ",f.size()); if(f&&last&&f.equivalentOn(last,s)&&f.size()>=5) return f; }
+				if(f&&last&&f.equivalentOn(last,s)) return f;
+			}else{ writeln(f," ",f.size()); if(f&&last&&f.equivalentOn(last,s)&&f.size()>=5) return f; }
 			last=f;
 		}
 	}
@@ -559,7 +559,7 @@ void performMeasurements(alias measure)(){
 	measure!(Set!int);
 	measure!(Map!(int,int));
 	measure!(MaxRegister!int);
-	// measure!(KDTree!int); // "1DTree"
+	measure!(KDTree!int); // "1DTree"
 	// not captured precisely in the fragment
 	measure!(IntProximityQuery); // maybe precise. TODO: figure this out
 	measure!RangeUpdate; // maybe precise. TODO: figure this out
@@ -569,7 +569,7 @@ void performMeasurements(alias measure)(){
 	measure!Stack;
 	measure!MinHeap;
 	measure!(MultiSet!int);
-	//measure!(PartialMap); // TODO: why is put/size spec wrong consistently?
+	measure!(PartialMap);
 	/+measure!(UnionFind!("default",false))();
 	measure!(UnionFind!("min",false))();
 	measure!(UnionFind!("deterministic",false))();
@@ -578,7 +578,7 @@ void performMeasurements(alias measure)(){
 	measure!(UnionFind!"deterministic")();
 	measure!BitTextEditor;
 	measure!(ArrayList!int)();
-	measure!BitList;+/
+	measure!BitList;
 	//measure!LexicographicProximityQuery(100000000); // TODO: why is this so hard?+/
 }
 

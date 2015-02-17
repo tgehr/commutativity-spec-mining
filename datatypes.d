@@ -442,7 +442,7 @@ struct PartialMap{
 	Map!(int,int) map;
 
 	int put(int k,int v){ dom.add(k); return map.put(k,v); }
-	@sampleFrom!("k","dom.elems.keys")
+	//@sampleFrom!("k","dom.elems.keys")
 	//@precondition!("k","dom.contains(k)")
 	Q!(int,"r",bool,"s") get(int k){
 		return containsKey(k)?
