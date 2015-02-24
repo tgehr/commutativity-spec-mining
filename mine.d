@@ -446,32 +446,53 @@ ResultStore maybeToNo(ResultStore s){
 	return ResultStore(map);
 }
 
+bool isRelevantPredicate(ResultStore s,Formula f){
+	bool isNot=false;
+	if(auto nt=cast(Not)f){
+		f=nt.operand;
+		isNot=true;
+	}
+	if(auto eq=cast(Eq)f){
+		assert(cast(Terminal)eq.operands[0]&&cast(Terminal)eq.operands[1]);
+		return !s.intEquatable!(incompat,true)(cast(Terminal)eq.operands[0],cast(Terminal)eq.operands[1])[isNot];
+	}
+	if(auto lt=cast(Lt)f){
+		assert(cast(Terminal)lt.operands[0]&&cast(Terminal)lt.operands[1]);
+		return !s.intSymmetric!incompat(cast(Terminal)lt.operands[0],cast(Terminal)lt.operands[1])[isNot];
+	}
+	if(auto t=cast(Terminal)f){
+		// Should be a boolean variable. Check this?
+		return !s.boolSymmetric!incompat(t)[isNot];
+	}
+	return false;
+}
+
 private bool soundincompat(Quat a,Quat b){ return (a==Quat.yes)^(b==Quat.yes); }
-FormulaSet extractRelevantBasicPredicates(alias incompat=soundincompat,bool occam=false,bool returnAll=false)(ResultStore s){
-	FormulaSet r;
+Formula[] extractRelevantBasicPredicates(alias incompat=soundincompat,bool occam=false,bool returnAll=false)(ResultStore s){
+	Formula[] r;
 	auto ints=s.terms(Type.int_);
 	auto bools=s.terms(Type.bool_);
 	foreach(x;bools){
 		static if(!returnAll) auto b=s.boolSymmetric!incompat(x);
 		else bool[2] b=[false,false];
-		if(!b[0]||!occam&&!b[1]) r.insert(x);
-		if(!b[1]||!occam&&!b[0]) r.insert(not(x));
+		if(!b[0]||!occam&&!b[1]) r~=x;
+		if(!b[1]||!occam&&!b[0]) r~=not(x);
 	}
-	foreach(x;ints){
-		foreach(y;ints){
+	foreach(k,x;ints){
+		foreach(y;ints[k..$]){
 			if(x is y) continue;
 			static if(!returnAll) auto be=s.intEquatable!(incompat,occam)(x,y);
 			else bool[2] be=[false,false];
-			if(!be[0]||!occam&&!be[1]) r.insert(x.eq(y));
-			if(!be[1]||!occam&&!be[0]) r.insert(not(x.eq(y)));
+			if(!be[0]||!occam&&!be[1]) r~=x.eq(y);
+			if(!be[1]||!occam&&!be[0]) r~=not(x.eq(y));
 		}
 	}
 	foreach(x;ints){
 		foreach(y;ints){
 			static if(!returnAll) auto bs=s.intSymmetric!incompat(x,y);
 			else bool[2] bs=[false,false];
-			if(!bs[0]||!occam&&!bs[1]) r.insert(x.lt(y));
-			if(!bs[1]||!occam&&!bs[0]) r.insert(not(x.lt(y)));
+			if(!bs[0]||!occam&&!bs[1]) r~=x.lt(y);
+			if(!bs[1]||!occam&&!bs[0]) r~=not(x.lt(y));
 		}
 	}
 	return r;
@@ -484,7 +505,7 @@ auto inferSoundSpec(T, string m1, string m2)(int numSamples){
 		s.addResult(a,c);
 	}
 	runExploration!(T,m1,m2,addSoundResult)(numSamples);
-	auto bp=extractRelevantBasicPredicates(s).array;
+	auto bp=extractRelevantBasicPredicates(s);
 	return s.getFormula().minimalEquivalent(bp);
 }
 private struct Void{}

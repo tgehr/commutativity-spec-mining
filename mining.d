@@ -99,7 +99,7 @@ Formula obtainDemoSpec(){
 	//[1, 3, 0, 4, 1, 3], [3, 2, 0, 2, 4, 1], [2, 0, 1, 0, 0, 0], [1, 1, 2, 1, 3, 4], [0, 1, 3, 2, 2, 0]
 	//[3, 4, 3, 2, 4, 2], [1, 2, 0, 1, 2, 0], [0, 2, 0, 0, 4, 0], [4, 0, 0, 0, 4, 3]
 	//[0, 2, 1, 0, 2, 2], [2, 3, 4, 1, 0, 3], [1, 4, 3, 2, 2, 4]
-	auto bp=extractRelevantBasicPredicates!(incompat,true,true)(s).array;
+	auto bp=extractRelevantBasicPredicates!(incompat,true,true)(s);
 	version(VERY_VERBOSE) writeln(bp,"\n",s);
 	auto f=greedyEquivalentTo(s,bp);
 	f=f.factorGreedily();
@@ -168,10 +168,10 @@ void main(){
 	runExperiments();+/
 
 	//printSpecs!VoidTest;
-	/+writeln(inferExistentialOccamSpec!(ExistentialTest,"add2until","squareFrom","get")(60000));
+	/+writeln(inferExistentialOccamSpec!(ExistentialTest,"add2until","squareFrom","get"));
 	// writeln(inferExistentialOccamSpec!(ArrayList!int,"add_at","indexOf","get")(600000));
 	//printSpecs!(MultiSetTest!int);
-	writeln(inferExistentialOccamSpec!(MultiSetTest!int,"add","remove","contains")(600000));
+	writeln(inferExistentialOccamSpec!(MultiSetTest!int,"add","remove","contains"));
 	
 	static existentialInferenceMethod(T,string m1,string m2)(int numSamples){
 		return inferExistentialOccamSpec!(T,m1,m2,"contains");
@@ -180,8 +180,9 @@ void main(){
 	printSpecs!(SetTest!int,existentialInferenceMethod);+/
 
 	import experiments;
-	runExperiments();
-	//writeln(inferOccamSpec!(Set!int,"add","size"));
+	//runExperiments();
+	//writeln(inferOccamSpec!(RangeUpdate,"add2","square")(50000));
+	//writeln(inferOccamSpec!(Set!int,"add","remove"));
 	//writeln(inferOccamSpec!(LexicographicProximityQuery,"insert","nextLarger")(1000000));
 	//writeln(t.doCommute!("findFirst","shiftBlock")([MethodArgs([],[1]),MethodArgs([2,5])],res));
 	//writeln(inferOccamSpec!(BitList,"findClosest","shiftBlock"));
@@ -189,8 +190,8 @@ void main(){
 	//performMeasurements!measureTypeDiagrams();
 	//runTypeCounting();
 	// captured precisely in the fragment:
-	/+printSpecs!(Set!int);
-	printSpecs!(Map!(int,int));
+	printSpecs!(Set!int);
+	/+printSpecs!(Map!(int,int));
 	printSpecs!(MultiSet!int);
 	printSpecs!(MaxRegister!int);
 	printSpecs!RangeUpdate;

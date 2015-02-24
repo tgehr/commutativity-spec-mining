@@ -949,29 +949,6 @@ bool hasLt(Formula f){
 	return s.b;
 }
 
-FormulaSet extractRelevantBasicPredicates(Formula f){
-	static struct V{
-		FormulaSet s;
-		// TODO: think about this properly!
-		void perform(Eq e){ s.insert(e); s.insert(not(e)); }
-		void perform(Lt l){
-			s.insert(l);
-			s.insert(not(l));
-			s.insert(lt(l.operands[1],l.operands[0]));
-			s.insert(not(lt(l.operands[1],l.operands[0])));
-			perform(eq(l.operands[0],l.operands[1]));
-		}
-	}
-	V v;
-	v.visit(f);
-	foreach(t;f.getVariables()[1]){ v.s.insert(t); v.s.insert(not(t)); }
-	return v.s;
-}
-
-Formula minimalEquivalent(Formula f){
-	return minimalEquivalent(f,f.extractRelevantBasicPredicates().array);
-}
-
 Formula minimalEquivalent(Formula f,Formula[] bp){
 	auto vbl=getVariables(f).forEach!(a=>a.array);
 	Formula[][][2] memo;

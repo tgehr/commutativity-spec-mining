@@ -102,7 +102,7 @@ auto inferTimedOccamSpec(T, string m1, string m2)(int numSamples=0, int searchTi
 	s=s.maybeToNo();
 	/+version(VERBOSE) writeln("greedy w/o");
 	stats.greedy[0]=obtainTimedSpec!((TickDuration timeout){
-		auto bp=extractRelevantBasicPredicates!(incompat,true,true)(s).array;
+		auto bp=extractRelevantBasicPredicates!(incompat,true,true)(s);
 		auto f=greedyEquivalentTo(s,bp,timeout);
 		f=f.factorGreedily();
 		return f;
@@ -110,14 +110,14 @@ auto inferTimedOccamSpec(T, string m1, string m2)(int numSamples=0, int searchTi
 	version(VERBOSE) writeln(stats.greedy[0].formula);
 	version(VERBOSE) writeln("exhaustive w/o");
 	stats.exhaustive[0]=obtainTimedSpec!((TickDuration timeout){
-		auto bp=extractRelevantBasicPredicates!(incompat,true,true)(s).array;
+		auto bp=extractRelevantBasicPredicates!(incompat,true,true)(s);
 		auto f=minimalEquivalentTo(s,bp,timeout);
 		return f;
 	},tooLargeForExhaustive[0])(searchTimeout);
 	version(VERBOSE) writeln(stats.exhaustive[0].formula);
 	version(VERBOSE) writeln("greedy w/");
 	stats.greedy[1]=obtainTimedSpec!((TickDuration timeout){
-		auto bp=extractRelevantBasicPredicates!(incompat,true)(s).array;
+		auto bp=extractRelevantBasicPredicates!(incompat,true)(s);
 		auto f=greedyEquivalentTo(s,bp,timeout);
 		f=f.factorGreedily();
 		return f;
@@ -125,7 +125,7 @@ auto inferTimedOccamSpec(T, string m1, string m2)(int numSamples=0, int searchTi
 	version(VERBOSE) writeln(stats.greedy[1].formula);
 	version(VERBOSE) writeln("exhaustive w/");
 	stats.exhaustive[1]=obtainTimedSpec!((TickDuration timeout){
-		auto bp=extractRelevantBasicPredicates!(incompat,true)(s).array;
+		auto bp=extractRelevantBasicPredicates!(incompat,true)(s);
 		auto f=minimalEquivalentTo(s,bp,timeout);
 		return f;
 	},tooLargeForExhaustive[1])(searchTimeout);

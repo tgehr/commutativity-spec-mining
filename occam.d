@@ -4,9 +4,8 @@ import mine, formula, options;
 import hashtable;
 
 
-auto buildFormula(ResultStore t,TickDuration timeout=TickDuration(0)){
-	version(VERBOSE) writeln("inferring formula...");
-	auto bp=extractRelevantBasicPredicates!(incompat,true,!enablePredicateDiscovery)(t).array;
+auto oldSearch(ResultStore t,TickDuration timeout=TickDuration(0)){
+	auto bp=extractRelevantBasicPredicates!(incompat,true,!enablePredicateDiscovery)(t);
 	version(VERY_VERBOSE) writeln(bp,"\n",t);
 	//writeln(bp.length," ",bp);
 	//auto f=greedyEquivalentTo(t,bp,timeout);
@@ -14,7 +13,13 @@ auto buildFormula(ResultStore t,TickDuration timeout=TickDuration(0)){
 	f=f.factorGreedily();
 	//auto f=minimalEquivalentTo(t,bp);
 	//auto f=monteCarloMarkovChainEquivalentTo(t,bp);
-	return f;
+	return f;	
+}
+
+auto buildFormula(ResultStore t,TickDuration timeout=TickDuration(0)){
+	version(VERBOSE) writeln("inferring formula...");
+	//return oldSearch(t,timeout);
+	return predicateDiscoverySearch(t,timeout);
 }
 
 auto inferOccamSpecCommon(alias s,alias addOccamResult,T,string m1,string m2)(int numSamples){
@@ -250,11 +255,86 @@ ResultStore removeFrom(Formula f, ResultStore s){
 	return ResultStore(map);
 }
 
+ResultStore keepFrom(Formula f, ResultStore s){
+	size_t num=0;
+	typeof(s.map) map;
+	foreach(k,v;s.map) if(evaluate(f,k.a)) map[k]=v;
+	return ResultStore(map);
+}
+
 ResultStore trueAssignments(ResultStore s){
 	typeof(s.map) map;
 	foreach(k,v;s.map) if(v==Quat.yes) map[k]=v;
 	return ResultStore(map);
 }
+
+bool isLiteral(Formula f){ return !cast(And)f&&!cast(Or)f; }
+
+Formula predicateDiscoverySearch(ResultStore s,TickDuration timeout=TickDuration(0)){
+	bool to=timeout!=TickDuration(0);
+	StopWatch sw; if(to) sw.start();
+	if(ff.equivalentTo(s)) return ff;
+	if(tt.equivalentTo(s)) return tt;
+	auto bp=extractRelevantBasicPredicates!(incompat,true)(s);
+	FormulaSet explored;
+	Formula[] small=bp;
+	Formula[] large=[];
+	foreach(f;small) if(f.equivalentTo(s)) return f;
+	for(;;small=large,large=[]){
+		foreach(f;small){
+			// TODO: write more nicely/faster
+			Formula[] computeLarge(Formula cur,Formula hole){
+				Formula[] res;
+				if(cur.isLiteral()){ // TODO: write isLiteral helper
+					auto chole=hole.and(cur);
+					auto dhole=hole.and(not(cur));
+					auto cs=chole.keepFrom(s);
+					auto ds=dhole.keepFrom(s);
+					foreach(p;bp){
+						if(p is cur) continue;
+						// TODO: compute entire formula at this point.
+						// checking set membership is faster than checking relevance.
+						if(cs.isRelevantPredicate(p)) res~=cur.and(p);
+						if(ds.isRelevantPredicate(p)) res~=cur.or(p);
+					}
+					/+writeln(res.length," ",bp.length);
+					if(!res.length) writeln(f," ",cur," ",hole);+/
+				}else if(auto a=cast(And)cur){
+					auto conj=a.operands;
+					auto conjtmp=conj.dup;
+					foreach(c;conj){
+						conjtmp.remove(c);
+						auto ctmp=and(conjtmp.dup);
+						auto nhole=hole.and(ctmp);
+						res~=computeLarge(c,nhole).map!(a=>a.and(ctmp)).array;
+						conjtmp.insert(c);
+					}
+				}else if(auto o=cast(Or)cur){
+					auto disj=o.operands;
+					auto disjtmp=disj.dup;
+					foreach(d;disj){
+						disjtmp.remove(d);
+						auto dctmp=and(disjtmp.dup);
+						auto dtmp=or(disjtmp.dup);
+						auto nhole=hole.and(not(dctmp));
+						res~=computeLarge(d,nhole).map!(a=>a.or(dtmp)).array;
+						disjtmp.insert(d);
+					}					
+				}
+				return res;
+			}
+			foreach(n;computeLarge(f,tt)){
+				if(n in explored) continue;
+				// writeln(n);
+				if(n.equivalentTo(s)) return n;
+				explored.insert(n);
+				large~=n;
+			}
+			if(to&&sw.peek()>timeout){ writeln("TO!"); return null; }
+		}
+	}
+}
+
 
 Formula greedyEquivalentTo(ResultStore s,Formula[] bp,TickDuration timeout=TickDuration(0)){
 	bool to=timeout!=TickDuration(0);
