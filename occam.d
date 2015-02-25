@@ -1,5 +1,5 @@
 import std.array, std.algorithm, std.stdio;
-import std.datetime;
+import std.datetime, std.typecons: Q=Tuple,q=tuple;
 import mine, formula, options;
 import hashtable;
 
@@ -280,22 +280,44 @@ Formula predicateDiscoverySearch(ResultStore s,TickDuration timeout=TickDuration
 	Formula[] small=bp;
 	Formula[] large=[];
 	foreach(f;small) if(f.equivalentTo(s)) return f;
-	for(;;small=large,large=[]){
+	for(;;small=large,large=[],explored.clear()){
 		foreach(f;small){
+			static struct HoleWrapperStack{
+				Q!(Formula,"f",bool,"isAnd")[] ops;
+				alias ET=typeof(ops[0]);
+				void push(Formula f, bool isAnd){ ops~=ET(f,isAnd); }
+				void pop(){ ops=ops[0..$-1]; ops.assumeSafeAppend(); }
+				Formula wrap(Formula f){
+					foreach_reverse(op;ops){
+						if(op.isAnd) f=f.and(op.f);
+						else f=f.or(op.f);
+					}
+					return f;
+				}
+			}
+			HoleWrapperStack stack;
 			// TODO: write more nicely/faster
 			Formula[] computeLarge(Formula cur,Formula hole){
 				Formula[] res;
 				if(cur.isLiteral()){ // TODO: write isLiteral helper
 					auto chole=hole.and(cur);
 					auto dhole=hole.and(not(cur));
-					auto cs=chole.keepFrom(s);
+					auto cs=chole.keepFrom(s); // TODO: reasonable to initialize lazily?
 					auto ds=dhole.keepFrom(s);
 					foreach(p;bp){
 						if(p is cur) continue;
 						// TODO: compute entire formula at this point.
+						auto fa=stack.wrap(cur.and(p));
+						auto fo=stack.wrap(cur.or(p));
 						// checking set membership is faster than checking relevance.
-						if(cs.isRelevantPredicate(p)) res~=cur.and(p);
-						if(ds.isRelevantPredicate(p)) res~=cur.or(p);
+						if(fa !in explored && cs.isRelevantPredicate(p)){
+							res~=fa;
+							explored.insert(fa);
+						}
+						if(fo !in explored && ds.isRelevantPredicate(p)){
+							res~=fo;
+							explored.insert(fo);
+						}
 					}
 					/+writeln(res.length," ",bp.length);
 					if(!res.length) writeln(f," ",cur," ",hole);+/
@@ -306,7 +328,9 @@ Formula predicateDiscoverySearch(ResultStore s,TickDuration timeout=TickDuration
 						conjtmp.remove(c);
 						auto ctmp=and(conjtmp.dup);
 						auto nhole=hole.and(ctmp);
-						res~=computeLarge(c,nhole).map!(a=>a.and(ctmp)).array;
+						stack.push(ctmp,true);
+						res~=computeLarge(c,nhole);
+						stack.pop();
 						conjtmp.insert(c);
 					}
 				}else if(auto o=cast(Or)cur){
@@ -317,20 +341,20 @@ Formula predicateDiscoverySearch(ResultStore s,TickDuration timeout=TickDuration
 						auto dctmp=and(disjtmp.dup);
 						auto dtmp=or(disjtmp.dup);
 						auto nhole=hole.and(not(dctmp));
-						res~=computeLarge(d,nhole).map!(a=>a.or(dtmp)).array;
+						stack.push(dtmp,false);
+						res~=computeLarge(d,nhole);
+						stack.pop();
 						disjtmp.insert(d);
 					}					
 				}
 				return res;
 			}
 			foreach(n;computeLarge(f,tt)){
-				if(n in explored) continue;
-				// writeln(n);
 				if(n.equivalentTo(s)) return n;
-				explored.insert(n);
+				writeln(n);
 				large~=n;
 			}
-			if(to&&sw.peek()>timeout){ writeln("TO!"); return null; }
+			if(to&&sw.peek()>timeout){ return null; }
 		}
 	}
 }
