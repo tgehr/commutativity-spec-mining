@@ -13,7 +13,7 @@ auto oldSearch(ResultStore t,TickDuration timeout=TickDuration(0)){
 	f=f.factorGreedily();
 	//auto f=minimalEquivalentTo(t,bp);
 	//auto f=monteCarloMarkovChainEquivalentTo(t,bp);
-	return f;	
+	return f;
 }
 
 auto buildFormula(ResultStore t,TickDuration timeout=TickDuration(0)){
@@ -113,7 +113,7 @@ auto inferExistentialOccamSpec(T, string m1, string m2, methods...)(int numSampl
 		}
 		go!(0,0,0);
 	}
-	auto f=inferOccamSpecCommon!(s,addOccamResult,T,m1,m2)(numSamples);	
+	auto f=inferOccamSpecCommon!(s,addOccamResult,T,m1,m2)(numSamples);
 	foreach_reverse(q;qterms){
 		f=new Exists(q,f);
 	}
@@ -270,90 +270,101 @@ ResultStore trueAssignments(ResultStore s){
 
 bool isLiteral(Formula f){ return !cast(And)f&&!cast(Or)f; }
 
+struct PredicateDiscoverySearchFormulas{
+	ResultStore s;
+	this(ResultStore s){ this.s=s; }
+	int opApply(scope int delegate(Formula f) dg){
+		if(auto r=dg(ff)) return r;
+		if(auto r=dg(tt)) return r;
+		auto bp=extractRelevantBasicPredicates!(incompat,true)(s);
+		FormulaSet explored;
+		Formula[] small=bp;
+		Formula[] large=[];
+		foreach(f;small) if(auto r=dg(f)) return r;
+		for(;;small=large,large=[],explored.clear()){
+			foreach(f;small){
+				static struct HoleWrapperStack{
+					Q!(Formula,"f",bool,"isAnd")[] ops;
+					alias ET=typeof(ops[0]);
+					void push(Formula f, bool isAnd){ ops~=ET(f,isAnd); }
+					void pop(){ ops=ops[0..$-1]; ops.assumeSafeAppend(); }
+					Formula wrap(Formula f){
+						foreach_reverse(op;ops){
+							if(op.isAnd) f=f.and(op.f);
+							else f=f.or(op.f);
+						}
+						return f;
+					}
+				}
+				HoleWrapperStack stack;
+				// TODO: write more nicely/faster
+				int computeLarge(Formula cur,Formula hole){
+					if(cur.isLiteral()){
+						auto chole=hole.and(cur);
+						auto dhole=hole.and(not(cur));
+						auto cs=chole.keepFrom(s); // TODO: reasonable to initialize lazily?
+						auto ds=dhole.keepFrom(s);
+						foreach(p;bp){
+							if(p is cur) continue;
+							auto fa=stack.wrap(cur.and(p));
+							auto fo=stack.wrap(cur.or(p));
+							// checking set membership is faster than checking relevance.
+							if(fa !in explored && cs.isRelevantPredicate(p)){
+								if(auto r=dg(fa)) return r;
+								large~=fa;
+							}
+							if(fo !in explored && ds.isRelevantPredicate(p)){
+								if(auto r=dg(fo)) return r;
+								large~=fo;
+							}
+							explored.insert(fa), explored.insert(fo);
+						}
+					}else if(auto a=cast(And)cur){
+						auto conj=a.operands;
+						auto conjtmp=conj.dup;
+						foreach(c;conj){
+							conjtmp.remove(c);
+							auto ctmp=and(conjtmp.dup);
+							auto nhole=hole.and(ctmp);
+							stack.push(ctmp,true);
+							if(auto r=computeLarge(c,nhole))
+								return r;
+							stack.pop();
+							conjtmp.insert(c);
+						}
+					}else if(auto o=cast(Or)cur){
+						auto disj=o.operands;
+						auto disjtmp=disj.dup;
+						foreach(d;disj){
+							disjtmp.remove(d);
+							auto dctmp=and(disjtmp.dup);
+							auto dtmp=or(disjtmp.dup);
+							auto nhole=hole.and(not(dctmp));
+							stack.push(dtmp,false);
+							if(auto r=computeLarge(d,nhole))
+								return r;
+							stack.pop();
+							disjtmp.insert(d);
+						}
+					}
+					return 0;
+				}
+				if(auto r=computeLarge(f,tt)) return r;
+			}
+		}
+		return 0;
+	}
+}
+
 Formula predicateDiscoverySearch(ResultStore s,TickDuration timeout=TickDuration(0)){
 	bool to=timeout!=TickDuration(0);
 	StopWatch sw; if(to) sw.start();
-	if(ff.equivalentTo(s)) return ff;
-	if(tt.equivalentTo(s)) return tt;
-	auto bp=extractRelevantBasicPredicates!(incompat,true)(s);
-	FormulaSet explored;
-	Formula[] small=bp;
-	Formula[] large=[];
-	foreach(f;small) if(f.equivalentTo(s)) return f;
-	for(;;small=large,large=[],explored.clear()){
-		foreach(f;small){
-			static struct HoleWrapperStack{
-				Q!(Formula,"f",bool,"isAnd")[] ops;
-				alias ET=typeof(ops[0]);
-				void push(Formula f, bool isAnd){ ops~=ET(f,isAnd); }
-				void pop(){ ops=ops[0..$-1]; ops.assumeSafeAppend(); }
-				Formula wrap(Formula f){
-					foreach_reverse(op;ops){
-						if(op.isAnd) f=f.and(op.f);
-						else f=f.or(op.f);
-					}
-					return f;
-				}
-			}
-			HoleWrapperStack stack;
-			Formula addRes(Formula n){
-				if(n.equivalentTo(s)) return n;
-				large~=n;
-				writeln(n);
-				return null;
-			}
-			// TODO: write more nicely/faster
-			Formula computeLarge(Formula cur,Formula hole){
-				if(cur.isLiteral()){
-					auto chole=hole.and(cur);
-					auto dhole=hole.and(not(cur));
-					auto cs=chole.keepFrom(s); // TODO: reasonable to initialize lazily?
-					auto ds=dhole.keepFrom(s);
-					foreach(p;bp){
-						if(p is cur) continue;
-						auto fa=stack.wrap(cur.and(p));
-						auto fo=stack.wrap(cur.or(p));
-						// checking set membership is faster than checking relevance.
-						if(fa !in explored && cs.isRelevantPredicate(p))
-							if(auto f=addRes(fa)) return f;
-						if(fo !in explored && ds.isRelevantPredicate(p))
-							if(auto f=addRes(fo)) return f;
-						explored.insert(fa), explored.insert(fo);
-					}
-				}else if(auto a=cast(And)cur){
-					auto conj=a.operands;
-					auto conjtmp=conj.dup;
-					foreach(c;conj){
-						conjtmp.remove(c);
-						auto ctmp=and(conjtmp.dup);
-						auto nhole=hole.and(ctmp);
-						stack.push(ctmp,true);
-						if(auto f=computeLarge(c,nhole))
-							return f;
-						stack.pop();
-						conjtmp.insert(c);
-					}
-				}else if(auto o=cast(Or)cur){
-					auto disj=o.operands;
-					auto disjtmp=disj.dup;
-					foreach(d;disj){
-						disjtmp.remove(d);
-						auto dctmp=and(disjtmp.dup);
-						auto dtmp=or(disjtmp.dup);
-						auto nhole=hole.and(not(dctmp));
-						stack.push(dtmp,false);
-						if(auto f=computeLarge(d,nhole))
-							return f;
-						stack.pop();
-						disjtmp.insert(d);
-					}					
-				}
-				return null;
-			}
-			if(auto φ=computeLarge(f,tt)) return φ;
-			if(to&&sw.peek()>timeout){ return null; }
-		}
+	foreach(f;PredicateDiscoverySearchFormulas(s)){
+		if(f.equivalentTo(s)) return f;
+		writeln(f);
+		if(to&&sw.peek()>timeout){ return null; }
 	}
+	return null;
 }
 
 
