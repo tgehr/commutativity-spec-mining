@@ -19,7 +19,7 @@ auto oldSearch(ResultStore t,TickDuration timeout=TickDuration(0)){
 auto buildFormula(ResultStore t,TickDuration timeout=TickDuration(0)){
 	version(VERBOSE) writeln("inferring formula...");
 	//return oldSearch(t,timeout);
-	return predicateDiscoverySearch(t,timeout);
+	return greedyPredicateDiscoverySearch(t,timeout).factorGreedily();
 }
 
 auto inferOccamSpecCommon(alias s,alias addOccamResult,T,string m1,string m2)(int numSamples){
@@ -282,6 +282,8 @@ struct PredicateDiscoverySearchFormulas{
 		Formula[] large=[];
 		foreach(f;small) if(auto r=dg(f)) return r;
 		for(;;small=large,large=[],explored.clear()){
+			// this can happen for bad samples of e.g. UnionFind!("default",true), unite/unite:
+			if(!small.length) break; // TODO: understand this counterexample for soundness of PD.
 			foreach(f;small){
 				static struct HoleWrapperStack{
 					Q!(Formula,"f",bool,"isAnd")[] ops;
@@ -361,12 +363,55 @@ Formula predicateDiscoverySearch(ResultStore s,TickDuration timeout=TickDuration
 	StopWatch sw; if(to) sw.start();
 	foreach(f;PredicateDiscoverySearchFormulas(s)){
 		if(f.equivalentTo(s)) return f;
-		writeln(f);
 		if(to&&sw.peek()>timeout){ return null; }
 	}
 	return null;
 }
 
+Formula greedyPredicateDiscoverySearch(ResultStore s,TickDuration timeout=TickDuration(0)){
+	if(ff.equivalentTo(s)) return ff;
+	bool to=timeout!=TickDuration(0);
+	StopWatch sw; if(to) sw.start();
+	auto fs=PredicateDiscoverySearchFormulas(s);
+	Formula[] formulas;
+	auto uncovered=s.trueAssignments();
+	foreach(f;fs){
+		if(f!is ff&&f.implies(s)){
+			formulas~=f;
+			// fs.s=removeFrom(f,fs.s);
+			uncovered=removeFrom(f,uncovered);
+			if(!uncovered.map.length) return tryBuild(s,formulas);
+		}
+		if(to&&sw.peek()>timeout){ return null; }
+	}
+	return null;
+}
+
+
+Formula tryBuild(ResultStore s,Formula[] formulas,size_t maxNumDisjuncts=size_t.max)in{assert(formulas.length);}body{
+	auto tmps=s.trueAssignments();
+	Formula r=ff;
+	foreach(d;0..maxNumDisjuncts){
+		Formula best=null;
+		double bestScore=0;
+		foreach(xf;formulas){
+			auto siz=xf.size();
+			auto numShared=numSharedOn(xf,tmps,cast(size_t)(bestScore*siz));
+			if(numShared==tmps.map.length)
+				return r.or(xf).normalize;
+			auto curScore=cast(double)numShared/siz;
+			if(!best||curScore>bestScore){
+				bestScore=curScore;
+				best=xf;
+			}
+		}
+		if(bestScore==0) return null;
+		tmps=removeFrom(best,tmps);
+		r=r.or(best);
+		assert(tmps.map.length);
+	}
+	return null;
+}
 
 Formula greedyEquivalentTo(ResultStore s,Formula[] bp,TickDuration timeout=TickDuration(0)){
 	bool to=timeout!=TickDuration(0);
@@ -374,30 +419,6 @@ Formula greedyEquivalentTo(ResultStore s,Formula[] bp,TickDuration timeout=TickD
 	if(ff.equivalentTo(s)) return ff;
 	auto uncovered=s.trueAssignments();
 	Formula[] formulas;
-	Formula tryBuild(size_t maxNumDisjuncts)in{assert(formulas.length);}body{
-		auto tmps=s.trueAssignments();
-		Formula r=ff;
-		foreach(d;0..maxNumDisjuncts){
-			Formula best=null;
-			double bestScore=0;
-			foreach(xf;formulas){
-				auto siz=xf.size();
-				auto numShared=numSharedOn(xf,tmps,cast(size_t)(bestScore*siz));
-				if(numShared==tmps.map.length)
-					return r.or(xf).normalize;
-				auto curScore=cast(double)numShared/siz;
-				if(!best||curScore>bestScore){
-					bestScore=curScore;
-					best=xf;
-				}
-			}
-			if(bestScore==0) return null;
-			tmps=removeFrom(best,tmps);
-			r=r.or(best);
-			assert(tmps.map.length);
-		}
-		return null;
-	}
 	auto minformulas=NonEquivalentMinimalFormulasOn!And(s,100,bp,to?timeout-sw.peek():TickDuration(0));
 	foreach(curSiz;0..100){
 		foreach(EquivOnFormula g;minformulas.iterateThroughSize(curSiz)){
@@ -405,7 +426,7 @@ Formula greedyEquivalentTo(ResultStore s,Formula[] bp,TickDuration timeout=TickD
 			formulas~=g.f;
 			uncovered=removeFrom(g.f,uncovered);
 		}
-		if(formulas.length&&!uncovered.map.length) if(auto r=tryBuild(curSiz*2)) return r;
+		if(formulas.length&&!uncovered.map.length) if(auto r=tryBuild(s,formulas,curSiz*2)) return r;
 		if(to&&sw.peek()>timeout) return null; // TODO: iterate formulas on the fly while they are generated
 	}
 	return null;
