@@ -296,31 +296,30 @@ Formula predicateDiscoverySearch(ResultStore s,TickDuration timeout=TickDuration
 				}
 			}
 			HoleWrapperStack stack;
+			Formula addRes(Formula n){
+				if(n.equivalentTo(s)) return n;
+				large~=n;
+				writeln(n);
+				return null;
+			}
 			// TODO: write more nicely/faster
-			Formula[] computeLarge(Formula cur,Formula hole){
-				Formula[] res;
-				if(cur.isLiteral()){ // TODO: write isLiteral helper
+			Formula computeLarge(Formula cur,Formula hole){
+				if(cur.isLiteral()){
 					auto chole=hole.and(cur);
 					auto dhole=hole.and(not(cur));
 					auto cs=chole.keepFrom(s); // TODO: reasonable to initialize lazily?
 					auto ds=dhole.keepFrom(s);
 					foreach(p;bp){
 						if(p is cur) continue;
-						// TODO: compute entire formula at this point.
 						auto fa=stack.wrap(cur.and(p));
 						auto fo=stack.wrap(cur.or(p));
 						// checking set membership is faster than checking relevance.
-						if(fa !in explored && cs.isRelevantPredicate(p)){
-							res~=fa;
-							explored.insert(fa);
-						}
-						if(fo !in explored && ds.isRelevantPredicate(p)){
-							res~=fo;
-							explored.insert(fo);
-						}
+						if(fa !in explored && cs.isRelevantPredicate(p))
+							if(auto f=addRes(fa)) return f;
+						if(fo !in explored && ds.isRelevantPredicate(p))
+							if(auto f=addRes(fo)) return f;
+						explored.insert(fa), explored.insert(fo);
 					}
-					/+writeln(res.length," ",bp.length);
-					if(!res.length) writeln(f," ",cur," ",hole);+/
 				}else if(auto a=cast(And)cur){
 					auto conj=a.operands;
 					auto conjtmp=conj.dup;
@@ -329,7 +328,8 @@ Formula predicateDiscoverySearch(ResultStore s,TickDuration timeout=TickDuration
 						auto ctmp=and(conjtmp.dup);
 						auto nhole=hole.and(ctmp);
 						stack.push(ctmp,true);
-						res~=computeLarge(c,nhole);
+						if(auto f=computeLarge(c,nhole))
+							return f;
 						stack.pop();
 						conjtmp.insert(c);
 					}
@@ -342,18 +342,15 @@ Formula predicateDiscoverySearch(ResultStore s,TickDuration timeout=TickDuration
 						auto dtmp=or(disjtmp.dup);
 						auto nhole=hole.and(not(dctmp));
 						stack.push(dtmp,false);
-						res~=computeLarge(d,nhole);
+						if(auto f=computeLarge(d,nhole))
+							return f;
 						stack.pop();
 						disjtmp.insert(d);
 					}					
 				}
-				return res;
+				return null;
 			}
-			foreach(n;computeLarge(f,tt)){
-				if(n.equivalentTo(s)) return n;
-				writeln(n);
-				large~=n;
-			}
+			if(auto φ=computeLarge(f,tt)) return φ;
 			if(to&&sw.peek()>timeout){ return null; }
 		}
 	}
