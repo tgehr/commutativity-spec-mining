@@ -73,11 +73,11 @@ auto inferTimedOccamSpec(T, string m1, string m2)(int numSamples=0, int searchTi
 			auto f=buildFormula(s.maybeToNo(),sw.peek());
 			swSearch.stop();
 			//writeln(f," ",numSamples);
-			//if(f&&f is last) return f;
-			static if(!is(T==PartialMap)||m1!="put"||m2!="put"){
+			if(f&&f is last) return f;
+			/+static if(!is(T==PartialMap)||m1!="put"||m2!="put"){
 				//if(f&&f is last) return f; // TODO: why is search not deterministic?
 				if(f&&last&&f.equivalentOn(last,s)) return f;
-			}else{ writeln(f," ",f.size()); if(f&&last&&f.equivalentOn(last,s)&&f.size()>=5) return f; }
+			}else{ writeln(f," ",f.size()); if(f&&last&&f.equivalentOn(last,s)&&f.size()>=5) return f; }+/
 			last=f;
 		}
 	}

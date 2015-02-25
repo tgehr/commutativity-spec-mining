@@ -39,8 +39,8 @@ auto inferOccamSpecAdaptive(alias s,alias addOccamResult,T,string m1,string m2)(
 		runExplorationWithState!(T,m1,m2,addOccamResult)(state,numSamples);
 		auto f=buildFormula(s.maybeToNo(),sw.peek());
 		//static if(!is(T==Map!(int,int))||m1!="put"||m2!="put"){
-		//if(f&&f is last) return f; // TODO: why is search not deterministic?
-		if(f&&last&&f.equivalentOn(last,s)) return f;
+		if(f&&f is last) return f;
+		//if(f&&last&&f.equivalentOn(last,s)) return f;
 		//}else if(f&&last&&f.equivalentOn(last,s)&&f.size()>=5) return f;
 		last=f;
 	}
