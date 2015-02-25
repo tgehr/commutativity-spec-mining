@@ -86,7 +86,7 @@ struct HashMap(K_, V_, alias eq_ , alias h_){
 			}
 		length++;
 		*b~=x;
-		if(b.length>maxBucketSize&&hs!=h((*b)[0].k)) realloc();
+		if(b.length>maxBucketSize&&hs!=h((*b)[0].k)&&es.length<2*length) realloc();
 	}
 	
 	void opIndexAssign(V v, K k){
