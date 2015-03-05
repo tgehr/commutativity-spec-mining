@@ -270,7 +270,7 @@ ResultStore trueAssignments(ResultStore s){
 
 bool isLiteral(Formula f){ return !cast(And)f&&!cast(Or)f; }
 
-struct PredicateDiscoverySearchFormulas{
+struct PredicateDiscoverySearchFormulas(T...)if(T.length<=1){
 	ResultStore s;
 	this(ResultStore s){ this.s=s; }
 	int opApply(scope int delegate(Formula f) dg){
@@ -300,7 +300,13 @@ struct PredicateDiscoverySearchFormulas{
 				}
 				HoleWrapperStack stack;
 				// TODO: write more nicely/faster
-				int computeLarge(Formula cur,Formula hole){
+				static if(is(T[0]==And)) bool topLevel=true;
+				int computeLarge(Formula cur,Formula hole){	
+					static if(is(T[0]==And)){
+						bool otopLevel=topLevel;
+						topLevel=false;
+						scope(exit) topLevel=otopLevel;
+					}
 					if(cur.isLiteral()){
 						auto chole=hole.and(cur);
 						auto dhole=hole.and(not(cur));
@@ -315,11 +321,14 @@ struct PredicateDiscoverySearchFormulas{
 								if(auto r=dg(fa)) return r;
 								large~=fa;
 							}
+							explored.insert(fa);
+							static if(is(T[0]==And)) if(otopLevel) goto LskipD;
 							if(fo !in explored && ds.isRelevantPredicate(p)){
 								if(auto r=dg(fo)) return r;
 								large~=fo;
 							}
-							explored.insert(fa), explored.insert(fo);
+							explored.insert(fo);
+						LskipD:
 						}
 					}else if(auto a=cast(And)cur){
 						auto conj=a.operands;
@@ -361,7 +370,7 @@ struct PredicateDiscoverySearchFormulas{
 Formula predicateDiscoverySearch(ResultStore s,TickDuration timeout=TickDuration(0)){
 	bool to=timeout!=TickDuration(0);
 	StopWatch sw; if(to) sw.start();
-	foreach(f;PredicateDiscoverySearchFormulas(s)){
+	foreach(f;PredicateDiscoverySearchFormulas!()(s)){
 		if(f.equivalentTo(s)) return f;
 		if(to&&sw.peek()>timeout){ return null; }
 	}
@@ -372,10 +381,11 @@ Formula greedyPredicateDiscoverySearch(ResultStore s,TickDuration timeout=TickDu
 	if(ff.equivalentTo(s)) return ff;
 	bool to=timeout!=TickDuration(0);
 	StopWatch sw; if(to) sw.start();
-	auto fs=PredicateDiscoverySearchFormulas(s);
+	auto fs=PredicateDiscoverySearchFormulas!And(s);
 	Formula[] formulas;
 	auto uncovered=s.trueAssignments();
 	foreach(f;fs){
+		//writeln(f);
 		if(f!is ff&&f.implies(s)){
 			formulas~=f;
 			// fs.s=removeFrom(f,fs.s);

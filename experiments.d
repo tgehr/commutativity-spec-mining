@@ -570,7 +570,7 @@ void performMeasurements(alias measure)(){
 	measure!MinHeap;
 	measure!(MultiSet!int);
 	measure!(PartialMap);
-	/+measure!(UnionFind!("default",false))();
+	measure!(UnionFind!("default",false))();
 	measure!(UnionFind!("min",false))();
 	measure!(UnionFind!("deterministic",false))();
 	measure!(UnionFind!"default")();
