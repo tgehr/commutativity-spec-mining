@@ -66,3 +66,46 @@ struct OrderedPartition{
 				~ text("₀₁₂₃₄₅₆₇₈₉"d[i%10]));+/
 
 string lowSuffix(int i){ return (i>10?lowSuffix(i/10):"") ~ text("₀₁₂₃₄₅₆₇₈₉"d[i%10]); }
+
+struct Queue(T){
+	T[] e;
+	size_t size(){ return e.length; }
+	size_t cap=0;
+	void push(T t){
+		e~=t;
+	}
+	T pop()in{ assert(size());}body{
+		auto r=e[0];
+		e=e[1..$];
+		if(++cap>e.length){ // TODO: ok?
+			cap=0;
+			e=e.dup;
+		}
+		return r;
+	}
+}
+
+struct Heap(T,alias comp=(a,b)=>a<b){
+	T[] e; // TODO: contiguous storage suitable for this use case?
+	size_t size(){ return e.length; }
+	void push(T t){
+		e~=t;
+		for(auto i=e.length-1;i;i=i-1>>1)
+			if(e[i-1>>1]>e[i])
+				swap(e(i-1>>1,e[i]));
+	}
+	T pop()in{ assert(size()); }body{
+		auto r=e[0];
+		swap(e[0],e[$-1]);
+		e=e[0..$-1];
+		e.assumeSafeAppend();
+		for(size_t i=0;2*i+1<e.length;){
+			auto j=1+(2*i+2>=e.length||e[2*i+1]<e[2*i+2]);
+			if(elems[2*i+j]<e[i]){
+				swap(e[2*i+j],e[i]);
+				i=2*i+j;
+			}else break;
+		}
+		return r;
+	}
+}
