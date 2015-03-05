@@ -270,6 +270,86 @@ ResultStore trueAssignments(ResultStore s){
 
 bool isLiteral(Formula f){ return !cast(And)f&&!cast(Or)f; }
 
+struct PredicateDiscoveryNeighbours(alias filter,T...)if(T.length<=1){ // TODO: indirection from delegate results in very noticeable slowdown. Fix this.
+	Formula f;
+	ResultStore s;
+	Formula[] bp;
+	this(Formula f,ResultStore s,Formula[] bp){ this.f=f; this.s=s; this.bp=bp; }
+
+	int opApply(scope int delegate(Formula) dg){
+		static struct HoleWrapperStack{
+			Q!(Formula,"f",bool,"isAnd")[] ops;
+			alias ET=typeof(ops[0]);
+			void push(Formula f, bool isAnd){ ops~=ET(f,isAnd); }
+			void pop(){ ops=ops[0..$-1]; ops.assumeSafeAppend(); }
+			Formula wrap(Formula f){
+				foreach_reverse(op;ops){
+					if(op.isAnd) f=f.and(op.f);
+					else f=f.or(op.f);
+				}
+				return f;
+			}
+		}
+		HoleWrapperStack stack;
+		// TODO: write more nicely/faster
+		static if(is(T[0]==And)) bool topLevel=true;
+		int computeNeighbours(Formula cur,Formula hole){	
+			static if(is(T[0]==And)){
+				bool otopLevel=topLevel;
+				topLevel=false;
+				scope(exit) topLevel=otopLevel;
+			}
+			if(cur.isLiteral()){
+				auto chole=hole.and(cur);
+				auto dhole=hole.and(not(cur));
+				auto cs=chole.keepFrom(s); // TODO: reasonable to initialize lazily?
+				auto ds=dhole.keepFrom(s);
+				foreach(p;bp){
+					if(p is cur) continue;
+					auto fa=stack.wrap(cur.and(p));
+					auto fo=stack.wrap(cur.or(p));
+					// checking set membership is faster than checking relevance.
+					if(filter(fa) && cs.isRelevantPredicate(p))
+						if(auto r=dg(fa)) return r;
+					static if(is(T[0]==And)) if(otopLevel) goto LskipD;
+					if(filter(fo) && ds.isRelevantPredicate(p))
+						if(auto r=dg(fo)) return r;
+				LskipD:
+				}
+			}else if(auto a=cast(And)cur){
+				auto conj=a.operands;
+				auto conjtmp=conj.dup;
+				foreach(c;conj){
+					conjtmp.remove(c);
+					auto ctmp=and(conjtmp.dup);
+					auto nhole=hole.and(ctmp);
+					stack.push(ctmp,true);
+					if(auto r=computeNeighbours(c,nhole))
+						return r;
+					stack.pop();
+					conjtmp.insert(c);
+				}
+			}else if(auto o=cast(Or)cur){
+				auto disj=o.operands;
+				auto disjtmp=disj.dup;
+				foreach(d;disj){
+					disjtmp.remove(d);
+					auto dctmp=and(disjtmp.dup);
+					auto dtmp=or(disjtmp.dup);
+					auto nhole=hole.and(not(dctmp));
+					stack.push(dtmp,false);
+					if(auto r=computeNeighbours(d,nhole))
+						return r;
+					stack.pop();
+					disjtmp.insert(d);
+				}
+			}
+			return 0;
+		}
+		return computeNeighbours(f,tt);
+	}
+}
+
 struct PredicateDiscoverySearchFormulas(T...)if(T.length<=1){
 	ResultStore s;
 	this(ResultStore s){ this.s=s; }
@@ -287,82 +367,11 @@ struct PredicateDiscoverySearchFormulas(T...)if(T.length<=1){
 			// this can happen for bad samples of e.g. UnionFind!("default",true), unite/unite:
 			if(!q.size()) break; // TODO: understand this counterexample for soundness of PD.
 			auto f=q.pop();
-			static struct HoleWrapperStack{
-				Q!(Formula,"f",bool,"isAnd")[] ops;
-				alias ET=typeof(ops[0]);
-				void push(Formula f, bool isAnd){ ops~=ET(f,isAnd); }
-				void pop(){ ops=ops[0..$-1]; ops.assumeSafeAppend(); }
-				Formula wrap(Formula f){
-					foreach_reverse(op;ops){
-						if(op.isAnd) f=f.and(op.f);
-						else f=f.or(op.f);
-					}
-					return f;
-				}
+			foreach(g;PredicateDiscoveryNeighbours!(f=>f !in explored,T)(f,s,bp)){
+				if(auto r=dg(g)) return r;
+				q.push(g);
+				explored.insert(g);
 			}
-			HoleWrapperStack stack;
-			// TODO: write more nicely/faster
-			static if(is(T[0]==And)) bool topLevel=true;
-			int computeLarge(Formula cur,Formula hole){	
-				static if(is(T[0]==And)){
-					bool otopLevel=topLevel;
-					topLevel=false;
-					scope(exit) topLevel=otopLevel;
-				}
-				if(cur.isLiteral()){
-					auto chole=hole.and(cur);
-					auto dhole=hole.and(not(cur));
-					auto cs=chole.keepFrom(s); // TODO: reasonable to initialize lazily?
-					auto ds=dhole.keepFrom(s);
-					foreach(p;bp){
-						if(p is cur) continue;
-						auto fa=stack.wrap(cur.and(p));
-						auto fo=stack.wrap(cur.or(p));
-						// checking set membership is faster than checking relevance.
-						if(fa !in explored && cs.isRelevantPredicate(p)){
-							if(auto r=dg(fa)) return r;
-							q.push(fa);
-						}
-						explored.insert(fa);
-						static if(is(T[0]==And)) if(otopLevel) goto LskipD;
-						if(fo !in explored && ds.isRelevantPredicate(p)){
-							if(auto r=dg(fo)) return r;
-							q.push(fo);
-						}
-						explored.insert(fo);
-					LskipD:
-					}
-				}else if(auto a=cast(And)cur){
-					auto conj=a.operands;
-					auto conjtmp=conj.dup;
-					foreach(c;conj){
-						conjtmp.remove(c);
-						auto ctmp=and(conjtmp.dup);
-						auto nhole=hole.and(ctmp);
-						stack.push(ctmp,true);
-						if(auto r=computeLarge(c,nhole))
-							return r;
-						stack.pop();
-						conjtmp.insert(c);
-					}
-				}else if(auto o=cast(Or)cur){
-					auto disj=o.operands;
-					auto disjtmp=disj.dup;
-					foreach(d;disj){
-						disjtmp.remove(d);
-						auto dctmp=and(disjtmp.dup);
-						auto dtmp=or(disjtmp.dup);
-						auto nhole=hole.and(not(dctmp));
-						stack.push(dtmp,false);
-						if(auto r=computeLarge(d,nhole))
-							return r;
-						stack.pop();
-						disjtmp.insert(d);
-					}
-				}
-				return 0;
-			}
-			if(auto r=computeLarge(f,tt)) return r;
 		}
 		return 0;
 	}
