@@ -358,7 +358,7 @@ struct PredicateDiscoverySearchFormulas(T...)if(T.length<=1){
 		if(auto r=dg(tt)) return r;
 		auto bp=extractRelevantBasicPredicates!(incompat,true)(s);
 		FormulaSet explored;
-		Queue!Formula q;
+		uQueue!Formula q;
 		foreach(f;bp){
 			if(auto r=dg(f)) return r;
 			q.push(f);
@@ -377,7 +377,41 @@ struct PredicateDiscoverySearchFormulas(T...)if(T.length<=1){
 	}
 }
 
-Formula predicateDiscoverySearch(ResultStore s,TickDuration timeout=TickDuration(0)){
+struct PredicateDiscoverySearchFormulasHeuristic(T...)if(T.length<=1){
+	ResultStore s;
+	this(ResultStore s){ this.s=s; }
+	int opApply(scope int delegate(Formula f) dg){
+		if(auto r=dg(ff)) return r;
+		if(auto r=dg(tt)) return r;
+		auto bp=extractRelevantBasicPredicates!(incompat,true)(s);
+		FormulaSet explored;
+		Heap!(Q!(double,Formula),(a,b)=>a[0]<b[0]) q;
+		foreach(f;bp){
+			if(auto r=dg(f)) return r;
+			q.push(.q(0.0,f));
+		}
+		for(;;){
+			// this can happen for bad samples of e.g. UnionFind!("default",true), unite/unite:
+			if(!q.size()) break; // TODO: understand this counterexample for soundness of PD.
+			auto wf=q.pop(), w=wf[0], f=wf[1];
+			Formula[] nbs; // TODO: do this w/o gc?
+			foreach(g;PredicateDiscoveryNeighbours!(f=>f !in explored,T)(f,s,bp)){
+				if(auto r=dg(g)) return r;
+				nbs~=g;
+				explored.insert(g);
+			}
+			w+=log(nbs.length+.0);
+			foreach(g;nbs) q.push(.q(w,g));
+
+		}
+		return 0;
+	}	
+}
+
+alias PredicateDiscoverySearchDefault = PredicateDiscoverySearchFormulasHeuristic;
+//alias PredicateDiscoverySearchDefault = PredicateDiscoverySearchFormulas;
+
+Formula predicateDiscoverySearch(alias PredicateDiscoverySearchFormulas=PredicateDiscoverySearchDefault)(ResultStore s,TickDuration timeout=TickDuration(0)){
 	bool to=timeout!=TickDuration(0);
 	StopWatch sw; if(to) sw.start();
 	foreach(f;PredicateDiscoverySearchFormulas!()(s)){
@@ -387,7 +421,7 @@ Formula predicateDiscoverySearch(ResultStore s,TickDuration timeout=TickDuration
 	return null;
 }
 
-Formula greedyPredicateDiscoverySearch(ResultStore s,TickDuration timeout=TickDuration(0)){
+Formula greedyPredicateDiscoverySearch(alias PredicateDiscoverySearchFormulas=PredicateDiscoverySearchDefault)(ResultStore s,TickDuration timeout=TickDuration(0)){
 	if(ff.equivalentTo(s)) return ff;
 	bool to=timeout!=TickDuration(0);
 	StopWatch sw; if(to) sw.start();

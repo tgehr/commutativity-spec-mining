@@ -67,7 +67,7 @@ struct OrderedPartition{
 
 string lowSuffix(int i){ return (i>10?lowSuffix(i/10):"") ~ text("₀₁₂₃₄₅₆₇₈₉"d[i%10]); }
 
-struct Queue(T){
+struct uQueue(T){
 	T[] e;
 	size_t size(){ return e.length; }
 	size_t cap=0;
@@ -91,8 +91,8 @@ struct Heap(T,alias comp=(a,b)=>a<b){
 	void push(T t){
 		e~=t;
 		for(auto i=e.length-1;i;i=i-1>>1)
-			if(e[i-1>>1]>e[i])
-				swap(e(i-1>>1,e[i]));
+			if(comp(e[i],e[i-1>>1]))
+				swap(e[i-1>>1],e[i]);
 	}
 	T pop()in{ assert(size()); }body{
 		auto r=e[0];
@@ -100,8 +100,8 @@ struct Heap(T,alias comp=(a,b)=>a<b){
 		e=e[0..$-1];
 		e.assumeSafeAppend();
 		for(size_t i=0;2*i+1<e.length;){
-			auto j=1+(2*i+2>=e.length||e[2*i+1]<e[2*i+2]);
-			if(elems[2*i+j]<e[i]){
+			auto j=1+(2*i+2>=e.length||comp(e[2*i+1],e[2*i+2]));
+			if(comp(e[2*i+j],e[i])){
 				swap(e[2*i+j],e[i]);
 				i=2*i+j;
 			}else break;
