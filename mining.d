@@ -184,8 +184,8 @@ void main(){
 	//printSpecs!(Map!(int,int));
 	//writeln(inferOccamSpec!(BitList,"resize","findClosest")(5000));
 	//writeln(inferOccamSpec!(Set!int,"add","remove"));
-	writeln(inferOccamSpec!(LexicographicProximityQuery,"insert","nextLarger")(1000000));
-	//writeln(inferOccamSpec!(LexicographicProximityQuery,"remove","nextLarger")(1000000));
+	//writeln(inferOccamSpec!(LexicographicProximityQuery,"insert","nextLarger"));
+	writeln(inferOccamSpec!(LexicographicProximityQuery,"remove","nextLarger"));
 	//writeln(t.doCommute!("findFirst","shiftBlock")([MethodArgs([],[1]),MethodArgs([2,5])],res));
 	//writeln(inferOccamSpec!(BitList,"findClosest","shiftBlock"));
 	//performMeasurements!printSpecs;

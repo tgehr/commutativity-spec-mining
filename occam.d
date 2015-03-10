@@ -429,7 +429,7 @@ Formula greedyPredicateDiscoverySearch(alias PredicateDiscoverySearchFormulas=Pr
 	Formula[] formulas;
 	auto uncovered=s.trueAssignments();
 	foreach(f;fs){
-		//writeln(f);
+		writeln(f);
 		if(f!is ff&&f.implies(s)){
 			formulas~=f;
 			// fs.s=removeFrom(f,fs.s);
