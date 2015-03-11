@@ -100,7 +100,7 @@ struct Heap(T,alias comp=(a,b)=>a<b){
 		e=e[0..$-1];
 		e.assumeSafeAppend();
 		for(size_t i=0;2*i+1<e.length;){
-			auto j=1+(2*i+2>=e.length||comp(e[2*i+1],e[2*i+2]));
+			auto j=2*i+2>=e.length||comp(e[2*i+1],e[2*i+2])?1:2;
 			if(comp(e[2*i+j],e[i])){
 				swap(e[2*i+j],e[i]);
 				i=2*i+j;
