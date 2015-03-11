@@ -165,7 +165,7 @@ string makeConstructorCommutative(T)(){
 string makeConstructorCommutAssocIdem(T,string dflt=null)(){
 	return "auto " ~ lowerf(__traits(identifier, T))~"(FormulaSet f){ auto fsh=f.shallow!"~__traits(identifier,T)~"; if(fsh.length==1) foreach(x;fsh) return x; "~(dflt.length?"if(!fsh.length) return "~dflt~";":"")~"return uniqueFormulaCommutAssocIdem!("~__traits(identifier,T)~")(fsh); }" ~
 		"auto " ~ lowerf(__traits(identifier, T))~"(Formula e1,Formula e2){ FormulaSet a;a.insert(e1);a.insert(e2);return "~lowerf(__traits(identifier, T))~"(a); }";
-	
+
 }
 string makeConstructorNonCommutAssocIdem(T)(){
 	return "auto " ~ lowerf(__traits(identifier, T))~"(Formula e1, Formula e2){ return uniqueFormulaNonCommutAssocIdem!("~__traits(identifier,T)~")(e1,e2); }";
@@ -255,7 +255,7 @@ mixin(makeConstructorNonCommutAssocIdem!Lt);
 class Exists: Formula{
 	Terminal t;
 	Formula f;
-	
+
 	this(Terminal t,Formula f){ this.t=t; this.f=f; }
 	override @property Precedence precedence(){ return Precedence.quantifier; }
 	override string toStringImpl(Precedence prec){
@@ -263,6 +263,16 @@ class Exists: Formula{
 	}
 }
 
+class ForAll: Formula{
+	Terminal t;
+	Formula f;
+
+	this(Terminal t,Formula f){ this.t=t; this.f=f; }
+	override @property Precedence precedence(){ return Precedence.quantifier; }
+	override string toStringImpl(Precedence prec){
+		return addp(prec,"∀ "~t.toString()~": "~f.toStringImpl(precedence));
+	}
+}
 
 void visit(T)(ref T result,Formula f){
 	alias Seq!(__traits(getOverloads,T,"perform")) overloads;
@@ -341,7 +351,7 @@ Terminal[Terminal] buildNormalizationTable(Formula f){
 }
 
 Formula applyNormalizationTable(Formula f, Terminal[Terminal] rr, bool normalizeEq){
-	Formula doit(Formula o){	
+	Formula doit(Formula o){
 		if(auto l=cast(Lt)o){
 			auto op0=cast(Terminal)l.operands[0], op1=cast(Terminal)l.operands[1];
 			mapThrough(rr,op0,op1);
@@ -426,6 +436,23 @@ Formula normalize(Formula f){
 	return f;
 }
 
+Formula negationNormalForm(Formula f){
+	if(auto n=cast(Not)f){
+		if(auto a=cast(And)n.operand){
+			FormulaSet r;
+			foreach(op;a.operands)
+				r.insert(negationNormalForm(not(op)));
+			return or(r);
+		}else if(auto a=cast(Or)n.operand){
+			FormulaSet r;
+			foreach(op;a.operands)
+				r.insert(negationNormalForm(not(op)));
+			return and(r);
+		}
+	}
+	return f;
+}
+
 Formula close(bool unclose=false)(Formula f){
 	auto a=cast(And)f;
 	if(!a) return f;
@@ -463,7 +490,7 @@ FormulaSet disjuncts(Formula f){
 	if(auto a=cast(Or)f) return a.operands;
 	FormulaSet s;
 	s.insert(f);
-	return s;	
+	return s;
 }
 
 auto unite(S,T)(S a,T b){
@@ -640,7 +667,7 @@ struct Assignment{
 		auto r=Assignment(variables,values.dup);
 		auto vt=this[t];
 		foreach(ref x;r.values) if(x==vt) x=v;
-		return r;		
+		return r;
 	}
 	Assignment update(Terminal t,Value v){
 		auto r=Assignment(variables,values.dup);
@@ -779,7 +806,7 @@ bool checkImplies(Formula a, Formula b){
 			return false;
 		}
 	}
-	return true;	
+	return true;
 }
 
 size_t equivClassHash(Formula f,Tuple!(Terminal[],Terminal[]) vbl){
@@ -824,7 +851,7 @@ Formula[] allBasicPredicates(Tuple!(Terminal[],Terminal[]) variables,bool lt=tru
 					 cartesianProduct(ints,ints)
 					 .map!(a=>(lt&&a[0]!is a[1]?[cast(Formula)a[0].lt(a[1])]:[])~(a[0].name<a[1].name?[cast(Formula)eq(a[0],a[1])]:[]))
 					 .joiner);
-	return preds.map!(a=>[a,not(a)]).joiner.array;	
+	return preds.map!(a=>[a,not(a)]).joiner.array;
 }
 
 import std.array;
@@ -959,5 +986,5 @@ Formula minimalEquivalent(Formula f,Formula[] bp){
 		if(g.f.equivalent(f))
 			return g.f;
 	}
-	return f;	
+	return f;
 }

@@ -22,22 +22,25 @@ auto buildFormula(ResultStore t,TickDuration timeout=TickDuration(0)){
 	return greedyPredicateDiscoverySearch(t,timeout).factorGreedily();
 }
 
-auto inferOccamSpecCommon(alias s,alias addOccamResult,T,string m1,string m2)(int numSamples){
-	if(!numSamples) return inferOccamSpecAdaptive!(s,addOccamResult,T,m1,m2)();
+auto inferOccamSpecCommon(alias s,alias addOccamResult,T,string m1,string m2,bool invertStore=false)(int numSamples){
+	if(!numSamples) return inferOccamSpecAdaptive!(s,addOccamResult,T,m1,m2,invertStore)();
 	runExploration!(T,m1,m2,addOccamResult)(numSamples);
 	auto t=s.maybeToNo();
+	static if(invertStore) t=t.invert();
 	auto f=buildFormula(t);
 	if(!f) f=t.getFormula();
 	return f;
 }
 
-auto inferOccamSpecAdaptive(alias s,alias addOccamResult,T,string m1,string m2)(){
+auto inferOccamSpecAdaptive(alias s,alias addOccamResult,T,string m1,string m2,bool invertStore)(){
 	int numSamples=5000;
 	auto state=ExplorationState!(T,m1,m2,addOccamResult)(0);
 	for(Formula last=null;;numSamples*=2){
 		auto sw=StopWatch(AutoStart.yes);
 		runExplorationWithState!(T,m1,m2,addOccamResult)(state,numSamples);
-		auto f=buildFormula(s.maybeToNo(),sw.peek());
+		static if(invertStore) auto t=s.invert().maybeToNo();
+		else auto t=s.maybeToNo();
+		auto f=buildFormula(t,sw.peek());
 		//static if(!is(T==Map!(int,int))||m1!="put"||m2!="put"){
 		if(f&&f is last) return f;
 		//if(f&&last&&f.equivalentOn(last,s)) return f;
@@ -64,7 +67,15 @@ auto inferOccamSpec(T, string m1, string m2)(int numSamples=0){
 
 //version=VERBOSE;
 //version=VERY_VERBOSE;
-auto inferExistentialOccamSpec(T, string m1, string m2, methods...)(int numSamples=5000){
+
+auto inferExistentialOccamSpec(T, string m1, string m2, methods...)(int numSamples=0){
+	return inferQuantifiedOccamSpec!(false,T,m1,m2,methods)(numSamples);
+}
+auto inferUniversalOccamSpec(T, string m1, string m2, methods...)(int numSamples=0){
+	return inferQuantifiedOccamSpec!(true,T,m1,m2,methods)(numSamples);
+}
+
+auto inferQuantifiedOccamSpec(bool forAll,T, string m1, string m2, methods...)(int numSamples=0){
 	ResultStore s;
 	Terminal[] eterms;
 	Terminal[] qterms;
@@ -113,9 +124,11 @@ auto inferExistentialOccamSpec(T, string m1, string m2, methods...)(int numSampl
 		}
 		go!(0,0,0);
 	}
-	auto f=inferOccamSpecCommon!(s,addOccamResult,T,m1,m2)(numSamples);
+	auto f=inferOccamSpecCommon!(s,addOccamResult,T,m1,m2,forAll)(numSamples);
+	static if(forAll) f=not(f).negationNormalForm();
 	foreach_reverse(q;qterms){
-		f=new Exists(q,f);
+		static if(forAll) f=new ForAll(q,f);
+		else f=new Exists(q,f);
 	}
 	return f;
 }
@@ -437,7 +450,7 @@ Formula greedyPredicateDiscoverySearch(alias PredicateDiscoverySearchFormulas=Pr
 	Formula[] formulas;
 	auto uncovered=s.trueAssignments();
 	foreach(f;fs){
-		writeln(f);
+		//writeln(f);
 		if(f!is ff&&f.implies(s)){
 			formulas~=f;
 			// fs.s=removeFrom(f,fs.s);

@@ -446,6 +446,15 @@ ResultStore maybeToNo(ResultStore s){
 	return ResultStore(map);
 }
 
+ResultStore invert(ResultStore s){
+	typeof(s.map) map;
+	foreach(k,v;s.map)
+		if(v==Quat.yes) map[k]=Quat.no;
+		else if(v==Quat.no) map[k]=Quat.yes;
+		else map[k]=v;
+	return ResultStore(map);
+}
+
 bool isRelevantPredicate(ResultStore s,Formula f){
 	bool isNot=false;
 	if(auto nt=cast(Not)f){

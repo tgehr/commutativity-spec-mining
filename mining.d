@@ -169,9 +169,11 @@ void main(){
 
 	//printSpecs!VoidTest;
 	//writeln(inferExistentialOccamSpec!(ExistentialTest,"add2until","squareFrom","get"));
-	writeln(inferExistentialOccamSpec!(ArrayList!int,"add_at","indexOf","get")(600000));
+	//writeln(inferExistentialOccamSpec!(ArrayList!int,"add_at","indexOf","get")(600000));
+	//writeln(inferUniversalOccamSpec!(ArrayList!int,"add_at","indexOf","get")(600000)); // TODO: get this
 	//printSpecs!(MultiSetTest!int);
-	//writeln(inferExistentialOccamSpec!(MultiSetTest!int,"add","remove","contains"));
+	writeln(inferExistentialOccamSpec!(MultiSetTest!int,"add","remove","contains"));
+	writeln(inferUniversalOccamSpec!(MultiSetTest!int,"add","remove","contains"));
 	
 	/+static existentialInferenceMethod(T,string m1,string m2)(int numSamples){
 		return inferExistentialOccamSpec!(T,m1,m2,"contains");
