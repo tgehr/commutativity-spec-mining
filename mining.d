@@ -168,12 +168,12 @@ void main(){
 	runExperiments();+/
 
 	//printSpecs!VoidTest;
-	/+writeln(inferExistentialOccamSpec!(ExistentialTest,"add2until","squareFrom","get"));
-	// writeln(inferExistentialOccamSpec!(ArrayList!int,"add_at","indexOf","get")(600000));
+	//writeln(inferExistentialOccamSpec!(ExistentialTest,"add2until","squareFrom","get"));
+	writeln(inferExistentialOccamSpec!(ArrayList!int,"add_at","indexOf","get")(600000));
 	//printSpecs!(MultiSetTest!int);
-	writeln(inferExistentialOccamSpec!(MultiSetTest!int,"add","remove","contains"));
+	//writeln(inferExistentialOccamSpec!(MultiSetTest!int,"add","remove","contains"));
 	
-	static existentialInferenceMethod(T,string m1,string m2)(int numSamples){
+	/+static existentialInferenceMethod(T,string m1,string m2)(int numSamples){
 		return inferExistentialOccamSpec!(T,m1,m2,"contains");
 	}
 
@@ -185,7 +185,7 @@ void main(){
 	//writeln(inferOccamSpec!(BitList,"resize","findClosest")(5000));
 	//writeln(inferOccamSpec!(Set!int,"add","remove"));
 	//writeln(inferOccamSpec!(LexicographicProximityQuery,"insert","nextLarger"));
-	writeln(inferOccamSpec!(LexicographicProximityQuery,"remove","nextLarger"));
+	//writeln(inferOccamSpec!(LexicographicProximityQuery,"remove","nextLarger"));
 	//writeln(t.doCommute!("findFirst","shiftBlock")([MethodArgs([],[1]),MethodArgs([2,5])],res));
 	//writeln(inferOccamSpec!(BitList,"findClosest","shiftBlock"));
 	//performMeasurements!printSpecs;

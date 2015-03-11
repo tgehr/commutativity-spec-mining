@@ -270,7 +270,7 @@ ResultStore trueAssignments(ResultStore s){
 
 bool isLiteral(Formula f){ return !cast(And)f&&!cast(Or)f; }
 
-struct PredicateDiscoveryNeighbours(alias filter,T...)if(T.length<=1){ // TODO: indirection from delegate results in very noticeable slowdown. Fix this.
+struct PredicateDiscoveryNeighbours(alias filter,T...){// TODO: indirection from delegate results in very noticeable slowdown. Fix this.
 	Formula f;
 	ResultStore s;
 	Formula[] bp;
@@ -292,9 +292,11 @@ struct PredicateDiscoveryNeighbours(alias filter,T...)if(T.length<=1){ // TODO: 
 		}
 		HoleWrapperStack stack;
 		// TODO: write more nicely/faster
-		static if(is(T[0]==And)) bool topLevel=true;
+		static if(is(T[0]==And)&&T.length>1&&T[1]=="only")
+			enum andOnly=true; else enum andOnly=false;
+		static if(is(T[0]==And)&&!andOnly) bool topLevel=true;
 		int computeNeighbours(Formula cur,Formula hole){	
-			static if(is(T[0]==And)){
+			static if(is(T[0]==And)&&!andOnly){
 				bool otopLevel=topLevel;
 				topLevel=false;
 				scope(exit) topLevel=otopLevel;
@@ -303,18 +305,20 @@ struct PredicateDiscoveryNeighbours(alias filter,T...)if(T.length<=1){ // TODO: 
 				auto chole=hole.and(cur);
 				auto dhole=hole.and(not(cur));
 				auto cs=chole.keepFrom(s); // TODO: reasonable to initialize lazily?
-				auto ds=dhole.keepFrom(s);
+				static if(!andOnly) auto ds=dhole.keepFrom(s);
 				foreach(p;bp){
 					if(p is cur) continue;
 					auto fa=stack.wrap(cur.and(p));
-					auto fo=stack.wrap(cur.or(p));
+					static if(!andOnly) auto fo=stack.wrap(cur.or(p));
 					// checking set membership is faster than checking relevance.
 					if(filter(fa) && cs.isRelevantPredicate(p))
 						if(auto r=dg(fa)) return r;
-					static if(is(T[0]==And)) if(otopLevel) goto LskipD;
-					if(filter(fo) && ds.isRelevantPredicate(p))
-						if(auto r=dg(fo)) return r;
-				LskipD:
+					static if(!andOnly){
+						static if(is(T[0]==And)) if(otopLevel) goto LskipD;
+						if(filter(fo) && ds.isRelevantPredicate(p))
+							if(auto r=dg(fo)) return r;
+					LskipD:
+					}
 				}
 			}else if(auto a=cast(And)cur){
 				auto conj=a.operands;
@@ -350,7 +354,7 @@ struct PredicateDiscoveryNeighbours(alias filter,T...)if(T.length<=1){ // TODO: 
 	}
 }
 
-struct PredicateDiscoverySearchFormulas(T...)if(T.length<=1){
+struct PredicateDiscoverySearchFormulas(T...){
 	ResultStore s;
 	this(ResultStore s){ this.s=s; }
 	int opApply(scope int delegate(Formula f) dg){
@@ -377,7 +381,7 @@ struct PredicateDiscoverySearchFormulas(T...)if(T.length<=1){
 	}
 }
 
-struct PredicateDiscoverySearchFormulasHeuristic(T...)if(T.length<=1){
+struct PredicateDiscoverySearchFormulasHeuristic(T...){
 	ResultStore s;
 	this(ResultStore s){ this.s=s; }
 	int opApply(scope int delegate(Formula f) dg){
@@ -400,7 +404,11 @@ struct PredicateDiscoverySearchFormulasHeuristic(T...)if(T.length<=1){
 				nbs~=g;
 				explored.insert(g);
 			}
-			w+=log(nbs.length+.0);
+			w+=log(nbs.length+.0); // (multiplicative)
+			//w=w/2+log(nbs.length+.0); // (sqrt-multiplicative)
+			//w=log(nbs.length+.0); // (last only)
+			//w+=1; // (only sizes)
+			//w+=nbs.length; // (additive)
 			foreach(g;nbs) q.push(.q(w,g));
 
 		}
