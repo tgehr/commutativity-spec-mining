@@ -153,6 +153,11 @@ bool implies(Formula g, ResultStore s){
 	return true;
 }
 
+bool implies(ResultStore s, Formula g){
+	foreach(k,v;s.map) if(incompat(v,Quat.no)&&!evaluate(g,k.a)) return false;
+	return true;
+}
+
 size_t equivClassHashOn(Formula f,ResultStore s){
 	size_t h=fnvb;
 	foreach(k,_;s.map){
@@ -281,6 +286,12 @@ ResultStore trueAssignments(ResultStore s){
 	return ResultStore(map);
 }
 
+ResultStore falseAssignments(ResultStore s){
+	typeof(s.map) map;
+	foreach(k,v;s.map) if(v==Quat.no) map[k]=v;
+	return ResultStore(map);
+}
+
 bool isLiteral(Formula f){ return !cast(And)f&&!cast(Or)f; }
 
 struct PredicateDiscoveryNeighbours(alias filter,T...){// TODO: indirection from delegate results in very noticeable slowdown. Fix this.
@@ -308,7 +319,7 @@ struct PredicateDiscoveryNeighbours(alias filter,T...){// TODO: indirection from
 		static if(is(T[0]==And)&&T.length>1&&T[1]=="only")
 			enum andOnly=true; else enum andOnly=false;
 		static if(is(T[0]==And)&&!andOnly) bool topLevel=true;
-		int computeNeighbours(Formula cur,Formula hole){	
+		int computeNeighbours(Formula cur,Formula hole){
 			static if(is(T[0]==And)&&!andOnly){
 				bool otopLevel=topLevel;
 				topLevel=false;
@@ -426,7 +437,7 @@ struct PredicateDiscoverySearchFormulasHeuristic(T...){
 
 		}
 		return 0;
-	}	
+	}
 }
 
 alias PredicateDiscoverySearchDefault = PredicateDiscoverySearchFormulasHeuristic;
@@ -442,13 +453,20 @@ Formula predicateDiscoverySearch(alias PredicateDiscoverySearchFormulas=Predicat
 	return null;
 }
 
+enum enableConjunctiveGreedy=true;
+
 Formula greedyPredicateDiscoverySearch(alias PredicateDiscoverySearchFormulas=PredicateDiscoverySearchDefault)(ResultStore s,TickDuration timeout=TickDuration(0)){
+	alias ecg=enableConjunctiveGreedy;
 	if(ff.equivalentTo(s)) return ff;
 	bool to=timeout!=TickDuration(0);
 	StopWatch sw; if(to) sw.start();
 	auto fs=PredicateDiscoverySearchFormulas!And(s);
 	Formula[] formulas;
 	auto uncovered=s.trueAssignments();
+	static if(ecg){
+		Formula[] formulasF;
+		auto uncoveredF=s.falseAssignments();
+	}
 	foreach(f;fs){
 		//writeln(f);
 		if(f!is ff&&f.implies(s)){
@@ -456,6 +474,17 @@ Formula greedyPredicateDiscoverySearch(alias PredicateDiscoverySearchFormulas=Pr
 			// fs.s=removeFrom(f,fs.s);
 			uncovered=removeFrom(f,uncovered);
 			if(!uncovered.map.length) return tryBuild(s,formulas);
+		}
+		static if(ecg){
+			if(f!is tt&&s.implies(f)){
+				formulasF~=f;
+				uncoveredF=removeFrom(f,uncoveredF);
+				if(!uncovered.map.length){
+					auto r=tryBuild(s.maybeToNo().invert(),formulasF.map!not.array);
+					if(!r) return r;
+					return not(r).negationNormalForm();
+				}
+			}
 		}
 		if(to&&sw.peek()>timeout){ return null; }
 	}

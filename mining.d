@@ -190,7 +190,7 @@ void main(){
 	//writeln(inferOccamSpec!(LexicographicProximityQuery,"remove","nextLarger"));
 	//writeln(t.doCommute!("findFirst","shiftBlock")([MethodArgs([],[1]),MethodArgs([2,5])],res));
 	//writeln(inferOccamSpec!(BitList,"findClosest","shiftBlock"));
-	//performMeasurements!printSpecs;
+	performMeasurements!printSpecs;
 	//performMeasurements!measureTypeDiagrams();
 	//runTypeCounting();
 	// captured precisely in the fragment:
