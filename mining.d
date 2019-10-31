@@ -57,7 +57,7 @@ Formula obtainDemoSpec(){
 	auto k1="k₁".t,k2="k₂".t,v1="v₁".t,v2="v₂".t,r1="r₁".t,r2="r₂".t;
 	auto terms=[k1,v1,r1,k2,v2,r2];
 	void add(int k1,int v1,int r1,int k2,int v2,int r2){
-		writeln(k1!=k2||v1==r1&&v2==r2);
+		writeln("(",k1,",",v1,",",r1,",",k2,",",v2,",",r2,") & ",k1!=k2||v1==r1&&v2==r2," \\\\");
 		s.addResult(Assignment(terms,[Value(k1),Value(v1),Value(r1),Value(k2),Value(v2),Value(r2)]),
 					k1!=k2||v1==r1&&v2==r2);
 	}
@@ -78,6 +78,12 @@ Formula obtainDemoSpec(){
 	add(1,2,2,1,1,2);
 	add(1,-1,-1,1,1,-1);
 
+	add(1,2,3,4,5,1);
+
+	add(1,2,2,1,1,1);
+	add(1,2,2,1,2,2);
+	add(1,2,2,1,2,2);
+
 
 	/*add(2,3,3,2,2,2);
 	add(3,3,3,3,3,2);
@@ -86,16 +92,15 @@ Formula obtainDemoSpec(){
 	add(0,3,2,0,3,1);
 	add(0,3,1,0,3,2);
 
-	add(3,3,2,3,3,3);*/
-	// add(3,3,2,3,3,3);
+	add(3,3,2,3,3,3);
+	add(3,3,2,3,3,3);
 
 
-
-	/+add(0,0,0,1,-3,0,true);
-	add(0,0,0,1,3,0,true);
-	add(1,2,-3,0,1,0,true);
-	add(1,2,-3,1,3,2,false);
-	add(1,2,3,1,3,-3,false);+/
+	add(0,0,0,1,-3,0);
+	add(0,0,0,1,3,0);
+	add(1,2,-3,0,1,0);
+	add(1,2,-3,1,3,2);
+	add(1,2,3,1,3,-3);*/
 	//[1, 3, 0, 4, 1, 3], [3, 2, 0, 2, 4, 1], [2, 0, 1, 0, 0, 0], [1, 1, 2, 1, 3, 4], [0, 1, 3, 2, 2, 0]
 	//[3, 4, 3, 2, 4, 2], [1, 2, 0, 1, 2, 0], [0, 2, 0, 0, 4, 0], [4, 0, 0, 0, 4, 3]
 	//[0, 2, 1, 0, 2, 2], [2, 3, 4, 1, 0, 3], [1, 4, 3, 2, 2, 4]
@@ -110,7 +115,7 @@ Formula obtainDemoSpec(){
 }
 
 void main(){
-	// writeln(obtainDemoSpec());
+	//writeln(obtainDemoSpec());
 	//writeln(inferOccamSpec!(Map!(int,int),"put","put")(5));
 
 	/+//code for generating some of the report
@@ -172,8 +177,8 @@ void main(){
 	//writeln(inferExistentialOccamSpec!(ArrayList!int,"add_at","indexOf","get")(600000));
 	//writeln(inferUniversalOccamSpec!(ArrayList!int,"add_at","indexOf","get")(600000)); // TODO: get this
 	//printSpecs!(MultiSetTest!int);
-	writeln(inferExistentialOccamSpec!(MultiSetTest!int,"add","remove","contains"));
-	writeln(inferUniversalOccamSpec!(MultiSetTest!int,"add","remove","contains"));
+	//writeln(inferExistentialOccamSpec!(MultiSetTest!int,"add","remove","contains"));
+	//writeln(inferUniversalOccamSpec!(MultiSetTest!int,"add","remove","contains"));
 	
 	/+static existentialInferenceMethod(T,string m1,string m2)(int numSamples){
 		return inferExistentialOccamSpec!(T,m1,m2,"contains");
