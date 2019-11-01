@@ -78,7 +78,7 @@ auto inOrder(S)(S s){
 	string toStr(Formula f){
 		import std.string;
 		auto s=f.toString();
-		s=removechars(s,"¬| ");
+		s=s.filter!(c=>!"¬| ".canFind(c)).to!string;
 		s=s.replace("≠","=");
 		s.replace("<","=");
 		return s;
@@ -855,9 +855,9 @@ Formula[] allBasicPredicates(Tuple!(Terminal[],Terminal[]) variables,bool lt=tru
 }
 
 import std.array;
-import std.datetime;
-Formula[] allFormulasOfSize(T,alias filter=_=>true)(size_t s,ref Formula[][][2] memo,TickDuration timeout=TickDuration(0)){
-	bool to=timeout!=TickDuration(0);
+import std.datetime.stopwatch;
+Formula[] allFormulasOfSize(T,alias filter=_=>true)(size_t s,ref Formula[][][2] memo,Duration timeout=0.hnsecs){
+	bool to=timeout!=0.hnsecs;
 	StopWatch sw; if(to) sw.start();
 	enum index=is(T==And)?0:1;
 	if(memo[index].length<=s) memo[index].length=(s*2)+1;
@@ -915,8 +915,8 @@ Formula[] allFormulasOfSize(T,alias filter=_=>true)(size_t s,ref Formula[][][2] 
 	return memo[index][s];
 }
 
-auto allFormulasOfSize(alias filter=_=>true)(size_t s, ref Formula[][][2] memo,TickDuration timeout=TickDuration(0)){
-	auto to=timeout!=TickDuration(0);
+auto allFormulasOfSize(alias filter=_=>true)(size_t s, ref Formula[][][2] memo,Duration timeout=0.hnsecs){
+	auto to=timeout!=0.hnsecs;
 	StopWatch sw; if(to) sw.start();
 	auto a=allFormulasOfSize!(And,filter)(s,memo,timeout);
 	auto b=s==1?[]:allFormulasOfSize!(Or,filter)(s,memo,to?timeout-sw.peek():timeout);

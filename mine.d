@@ -1,19 +1,13 @@
-module mine; // (this module is a huge ugly hack, but it works.)
+module mine;
 import formula, datatypes;
+// import annotations; // work around DMD forward reference bug
 import util, hashtable, options;
-import std.traits, std.array, std.algorithm, std.range;
+import std.traits, std.meta, std.array, std.algorithm, std.range;
 import std.typecons, std.random, std.math, std.conv;
 
 import std.stdio;
 auto dw()(){ writeln(); }
 auto dw(T...)(T args){ write(args[0]," "); dw(args[1..$]); }
-
-template staticFilter(alias F,T...){
-	static if(T.length){
-		static if(F!(T[0])) alias staticFilter=Seq!(T[0],staticFilter!(F,T[1..$]));
-		else alias staticFilter=staticFilter!(F,T[1..$]);
-	}else alias staticFilter=T;
-}
 
 template callFilter(T){
 	enum callFilter(string a)=
@@ -23,9 +17,9 @@ template callFilter(T){
 		isCallable!(mixin("T."~a));
 }
 
-import annotations;
+//import annotations;
 void modify(T)(ref T t){
-	alias methods=staticFilter!(callFilter!T,__traits(allMembers,T));
+	alias methods=Filter!(callFilter!T,__traits(allMembers,T));
 
  sw:switch(uniform(0,methods.length)){
 		foreach(i,m;methods){
@@ -93,7 +87,7 @@ Value runMethod(string m,T)(ref T arg, MethodArgs args){
 		return r~")";
 	}();
 	static if(is(typeof(mixin(code))==void)){
-		return mixin(code),Value();
+		mixin(code~";"); return Value();
 	}else return Value(mixin(code));
 }
 
@@ -635,7 +629,7 @@ auto runExplorationWithState(T, string m1, string m2, alias putResult=Void)(Expl
 		}
 	}
 	void boundedExhaustiveExploration(int intLowerBound,int intUpperBound,size_t numOps){
-		alias methods=staticFilter!(callFilter!T,__traits(allMembers,T));
+		alias methods=Filter!(callFilter!T,__traits(allMembers,T));
 		T t;
 		T[] allArgs;
 		version(VERY_VERBOSE) int cchecks=0;

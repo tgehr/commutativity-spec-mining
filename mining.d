@@ -3,7 +3,7 @@ module mining;
 
 import std.stdio;
 import std.traits, std.algorithm, std.array;
-import formula, mine, occam, datatypes;
+import formula, mine, occam;
 import util;
 
 //alias defaultInferenceMethod=inferSoundSpec;

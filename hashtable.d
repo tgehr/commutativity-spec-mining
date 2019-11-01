@@ -59,7 +59,7 @@ struct HashMap(K_, V_, alias eq_ , alias h_){
 	}
 
 	V opIndex(K k){
-		return get(k,(assert(0, "key not found"),V.init));
+		return get(k,{ assert(0, "key not found"); return V.init; }());
 	}
 
 	void remove(K k){

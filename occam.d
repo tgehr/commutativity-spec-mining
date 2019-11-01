@@ -1,10 +1,10 @@
 import std.array, std.algorithm, std.stdio;
-import std.datetime, std.typecons: Q=Tuple,q=tuple;
+import std.datetime.stopwatch, std.typecons: Q=Tuple,q=tuple;
 import mine, formula, options;
 import hashtable, util;
 
 
-auto oldSearch(ResultStore t,TickDuration timeout=TickDuration(0)){
+auto oldSearch(ResultStore t,Duration timeout=0.hnsecs){
 	auto bp=extractRelevantBasicPredicates!(incompat,true,!enablePredicateDiscovery)(t);
 	version(VERY_VERBOSE) writeln(bp,"\n",t);
 	//writeln(bp.length," ",bp);
@@ -16,7 +16,7 @@ auto oldSearch(ResultStore t,TickDuration timeout=TickDuration(0)){
 	return f;
 }
 
-auto buildFormula(ResultStore t,TickDuration timeout=TickDuration(0)){
+auto buildFormula(ResultStore t,Duration timeout=0.hnsecs){
 	version(VERBOSE) writeln("inferring formula...");
 	//return oldSearch(t,timeout);
 	return greedyPredicateDiscoverySearch(t,timeout).factorGreedily();
@@ -192,10 +192,10 @@ private:
 
 struct NonEquivalentMinimalFormulasOn(T...){
 	//TODO: elegance
-	StopWatch sw; TickDuration timeout;
-	this(ResultStore st,size_t sizeLimit,Formula[] bp,TickDuration timeout=TickDuration(0)){
+	StopWatch sw; Duration timeout;
+	this(ResultStore st,size_t sizeLimit,Formula[] bp,Duration timeout=0.hnsecs){
 		this.timeout=timeout;
-		if(timeout!=TickDuration(0)) sw.start();
+		if(timeout!=0.hnsecs) sw.start();
 		this.st=st; this.sizeLimit=sizeLimit;
 		foreach(index;0..2){
 			memo[index].length=2;
@@ -218,10 +218,10 @@ struct NonEquivalentMinimalFormulasOn(T...){
 						if(feq in outer.minSet) return false;
 						outer.minSet.insert(feq);
 						outer.hashesMap[f]=feq;
-						return true;})(s,outer.memo,outer.timeout!=TickDuration(0)?outer.timeout-outer.sw.peek():TickDuration(0))){
+						return true;})(s,outer.memo,outer.timeout!=0.hnsecs?outer.timeout-outer.sw.peek():0.hnsecs)){
 				if(g !in outer.hashesMap) outer.hashesMap[g]=EquivOnFormula(g,outer.st);
 				if(auto r=dg(outer.hashesMap[g])) return r;
-				if(outer.timeout!=TickDuration(0)&&outer.sw.peek()>outer.timeout)
+				if(outer.timeout!=0.hnsecs&&outer.sw.peek()>outer.timeout)
 					return 1;
 			}
 			return 0;
@@ -239,11 +239,11 @@ private:
 }
 
 // version=VERY_VERBOSE;
-Formula minimalEquivalentTo(ResultStore s,Formula[] bp,TickDuration timeout=TickDuration(0)){
-	bool to=timeout!=TickDuration(0);
+Formula minimalEquivalentTo(ResultStore s,Formula[] bp,Duration timeout=0.hnsecs){
+	bool to=timeout!=0.hnsecs;
 	StopWatch sw; if(to) sw.start();
 	auto fhash=equivClassHashOf(s);
-	foreach(EquivOnFormula g;NonEquivalentMinimalFormulasOn!()(s,100,bp,to?timeout-sw.peek():TickDuration(0))){
+	foreach(EquivOnFormula g;NonEquivalentMinimalFormulasOn!()(s,100,bp,to?timeout-sw.peek():0.hnsecs)){
 		version(VERY_VERBOSE){ import std.stdio; writeln("s: ",g.f.size()," considering formula ",g.f," ",g.toHash()); }
 		if(g.toHash()!=fhash) continue;
 		if(g.f.equivalentTo(s))
@@ -443,8 +443,8 @@ struct PredicateDiscoverySearchFormulasHeuristic(T...){
 alias PredicateDiscoverySearchDefault = PredicateDiscoverySearchFormulasHeuristic;
 //alias PredicateDiscoverySearchDefault = PredicateDiscoverySearchFormulas;
 
-Formula predicateDiscoverySearch(alias PredicateDiscoverySearchFormulas=PredicateDiscoverySearchDefault)(ResultStore s,TickDuration timeout=TickDuration(0)){
-	bool to=timeout!=TickDuration(0);
+Formula predicateDiscoverySearch(alias PredicateDiscoverySearchFormulas=PredicateDiscoverySearchDefault)(ResultStore s,Duration timeout=0.hnsecs){
+	bool to=timeout!=0.hnsecs;
 	StopWatch sw; if(to) sw.start();
 	foreach(f;PredicateDiscoverySearchFormulas!()(s)){
 		if(f.equivalentTo(s)) return f;
@@ -455,10 +455,10 @@ Formula predicateDiscoverySearch(alias PredicateDiscoverySearchFormulas=Predicat
 
 enum enableConjunctiveGreedy=true;
 
-Formula greedyPredicateDiscoverySearch(alias PredicateDiscoverySearchFormulas=PredicateDiscoverySearchDefault)(ResultStore s,TickDuration timeout=TickDuration(0)){
+Formula greedyPredicateDiscoverySearch(alias PredicateDiscoverySearchFormulas=PredicateDiscoverySearchDefault)(ResultStore s,Duration timeout=0.hnsecs){
 	alias ecg=enableConjunctiveGreedy;
 	if(ff.equivalentTo(s)) return ff;
-	bool to=timeout!=TickDuration(0);
+	bool to=timeout!=0.hnsecs;
 	StopWatch sw; if(to) sw.start();
 	auto fs=PredicateDiscoverySearchFormulas!And(s);
 	Formula[] formulas;
@@ -517,13 +517,13 @@ Formula tryBuild(ResultStore s,Formula[] formulas,size_t maxNumDisjuncts=size_t.
 	return null;
 }
 
-Formula greedyEquivalentTo(ResultStore s,Formula[] bp,TickDuration timeout=TickDuration(0)){
-	bool to=timeout!=TickDuration(0);
+Formula greedyEquivalentTo(ResultStore s,Formula[] bp,Duration timeout=0.hnsecs){
+	bool to=timeout!=0.hnsecs;
 	StopWatch sw; if(to) sw.start();
 	if(ff.equivalentTo(s)) return ff;
 	auto uncovered=s.trueAssignments();
 	Formula[] formulas;
-	auto minformulas=NonEquivalentMinimalFormulasOn!And(s,100,bp,to?timeout-sw.peek():TickDuration(0));
+	auto minformulas=NonEquivalentMinimalFormulasOn!And(s,100,bp,to?timeout-sw.peek():0.hnsecs);
 	foreach(curSiz;0..100){
 		foreach(EquivOnFormula g;minformulas.iterateThroughSize(curSiz)){
 			if(!g.f.implies(s)) continue;

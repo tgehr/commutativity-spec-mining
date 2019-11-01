@@ -5,7 +5,7 @@ import datatypes,mine,formula,occam,util;
 
 struct TimedSpec{
 	Formula formula;
-	TickDuration time;
+	Duration time;
 
 	bool timedOut;
 }
@@ -14,7 +14,7 @@ struct SpecStats{
 	int numSamples;
 	int numClasses;
 	int totNumClasses;
-	TickDuration exploration;
+	Duration exploration;
 	TimedSpec search;
 	//TimedSpec greedy[2];
 	//TimedSpec exhaustive[2];
@@ -26,7 +26,7 @@ auto obtainTimedSpec(alias dg, bool isATimeout=false)(int searchTimeout){
 	TimedSpec spec;
 	//static if(isATimeout){ spec.timedOut=true; return spec; }
 	auto sw=StopWatch(AutoStart.yes);
-	spec.formula=dg(cast(TickDuration)searchTimeout.dur!"seconds");
+	spec.formula=dg(searchTimeout.dur!"seconds");
 	if(spec.formula is null){ spec.timedOut=true; return spec; }
 	spec.time=sw.peek();
 	return spec;
@@ -101,7 +101,7 @@ auto inferTimedOccamSpec(T, string m1, string m2)(int numSamples=0, int searchTi
 	stats.totNumClasses=computeNumClasses(cast(int)s.terms(Type.int_).length)*cast(int)(2^^(s.terms(Type.bool_).length));
 	s=s.maybeToNo();
 	/+version(VERBOSE) writeln("greedy w/o");
-	stats.greedy[0]=obtainTimedSpec!((TickDuration timeout){
+	stats.greedy[0]=obtainTimedSpec!((Duration timeout){
 		auto bp=extractRelevantBasicPredicates!(incompat,true,true)(s);
 		auto f=greedyEquivalentTo(s,bp,timeout);
 		f=f.factorGreedily();
@@ -109,14 +109,14 @@ auto inferTimedOccamSpec(T, string m1, string m2)(int numSamples=0, int searchTi
 	},tooLargeForGreedy[0])(searchTimeout);
 	version(VERBOSE) writeln(stats.greedy[0].formula);
 	version(VERBOSE) writeln("exhaustive w/o");
-	stats.exhaustive[0]=obtainTimedSpec!((TickDuration timeout){
+	stats.exhaustive[0]=obtainTimedSpec!((Duration timeout){
 		auto bp=extractRelevantBasicPredicates!(incompat,true,true)(s);
 		auto f=minimalEquivalentTo(s,bp,timeout);
 		return f;
 	},tooLargeForExhaustive[0])(searchTimeout);
 	version(VERBOSE) writeln(stats.exhaustive[0].formula);
 	version(VERBOSE) writeln("greedy w/");
-	stats.greedy[1]=obtainTimedSpec!((TickDuration timeout){
+	stats.greedy[1]=obtainTimedSpec!((Duration timeout){
 		auto bp=extractRelevantBasicPredicates!(incompat,true)(s);
 		auto f=greedyEquivalentTo(s,bp,timeout);
 		f=f.factorGreedily();
@@ -124,7 +124,7 @@ auto inferTimedOccamSpec(T, string m1, string m2)(int numSamples=0, int searchTi
 	},tooLargeForGreedy[1])(searchTimeout);
 	version(VERBOSE) writeln(stats.greedy[1].formula);
 	version(VERBOSE) writeln("exhaustive w/");
-	stats.exhaustive[1]=obtainTimedSpec!((TickDuration timeout){
+	stats.exhaustive[1]=obtainTimedSpec!((Duration timeout){
 		auto bp=extractRelevantBasicPredicates!(incompat,true)(s);
 		auto f=minimalEquivalentTo(s,bp,timeout);
 		return f;
@@ -155,7 +155,7 @@ struct TimedSpecSummary{
 	int maxDisjunctSize;
 	int total;
 	int number;
-	TickDuration time;
+	Duration time;
 
 	void add(TimedSpec r){
 		maxSize=max(maxSize,cast(int)r.formula.size());
@@ -192,7 +192,7 @@ struct TimedSpecSummary{
 	}
 
 
-	void addTo(ref TickDuration td){
+	void addTo(ref Duration td){
 		td+=time;
 	}
 	void divBy(int x){
@@ -210,7 +210,7 @@ struct SpecSummary{
 	int numSamples;
 	int numClasses;
 	int totNumClasses;
-	TickDuration exploration;
+	Duration exploration;
 	TimedSpecSummary search;
 	//TimedSpecSummary greedy[2];
 	//TimedSpecSummary exhaustive[2];
@@ -269,7 +269,7 @@ struct SpecSummary{
 	}
 
 
-	void addTo(ref TickDuration td){
+	void addTo(ref Duration td){
 		td+=exploration;
 		search.addTo(td);
 		/+foreach(i;0..2){
@@ -387,9 +387,9 @@ string[2] createTables(Spec[] specs){
 		tbl~=`\begin{tabular}{lcccrcrr}\toprule`~"\n";
 		tbl~=`{\bf Data structure} & {\bf Methods} & {\bf Size} & {\bf Disj.} & {\bf \#Samples} & {\bf \#Types} & {\bf Sampling} & {\bf Search} \\\midrule`~"\n";
 	}
-	string formatTime(TickDuration time){
-		if(to!Duration(time)>=1.dur!"seconds") return text(time.to!("seconds",double).sigFig(2),"s");
-		return text(time.to!("msecs",double).sigFig(2),"ms");
+	string formatTime(Duration time){
+		if(time>=1.seconds) return text((time.total!"hnsecs"/1e7).sigFig(2),"s");
+		return text((time.total!"hnsecs"/1e4).sigFig(2),"ms");
 	}
 	string formatTimedSpec(TimedSpec spec){
 		if(spec.timedOut) return "T/O";
@@ -449,9 +449,9 @@ string[2] createAverageAndMaxTables(Spec[][] allSpecs){
 		tbl~=`{\bf Data structure} & {\bf Pairs} & {\bf Size} & {\bf Disj.} & {\bf \#Samples} & {\bf \#Types} & {\bf Sampling} & {\bf Search} \\\midrule`~"\n";
 	}
 
-	string formatTime(TickDuration time){
-		if(to!Duration(time)>=1.dur!"seconds") return text(time.to!("seconds",double).sigFig(2),"s");
-		return text(time.to!("msecs",double).sigFig(2)/+,"ms"+/);
+	string formatTime(Duration time){
+		if(time>=1.seconds) return text((time.total!"hnsecs"/1e7).sigFig(2),"s");
+		return text((time.total!"hnsecs"/1e4).sigFig(2)/+,"ms"+/);
 	}
 	string formatTimedSpec(TimedSpec spec){
 		if(spec.timedOut) return "T/O";
@@ -484,7 +484,7 @@ string[2] createAverageAndMaxTables(Spec[][] allSpecs){
 			maxmaries[i][spec.dataType].maxOut(spec.stats);
 		}
 	}
-	auto totalTime=new TickDuration[](allSpecs.length);
+	auto totalTime=new Duration[](allSpecs.length);
 	foreach(which,ref tbl;Seq!(s,t)){
 		static if(which) alias maries=maxmaries;
 		else alias maries=summaries;
@@ -512,14 +512,14 @@ string[2] createAverageAndMaxTables(Spec[][] allSpecs){
 	s~=`\end{tabular}`~"\n";
 	t~=`\bottomrule`~"\n";
 	t~=`\end{tabular}`~"\n";
-	TickDuration average=0;
+	Duration average=0.hnsecs;
 	foreach(i;0..allSpecs.length)
 		average+=totalTime[i];
 	average/=allSpecs.length;
-	s~=text("average total time: ",average.to!("msecs",double),"ms")~"\n";
+	s~=text("average total time: ",average.total!"hnsecs"/1e4,"ms")~"\n";
 	double variance=0;
 	foreach(i;0..allSpecs.length){
-		variance+=(totalTime[i].to!("msecs",double)-average.to!("msecs",double))^^2;
+		variance+=(totalTime[i].total!"hnsecs"/1e4-average.total!"hnsecs"/1e4)^^2;
 	}
 	variance/=allSpecs.length-1;
 	s~=text("variance of total time: ",variance,"ms^2")~"\n";

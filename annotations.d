@@ -1,5 +1,5 @@
-import std.traits,std.random;
-import datatypes,util;
+import std.traits,std.meta;
+import util;
 
 @annotation
 struct annotation{}
@@ -7,12 +7,8 @@ struct annotation{}
 
 template obtainSamplerFor(alias method, string parameter){
 	alias udas=Seq!(__traits(getAttributes,method));
-	alias obtainSamplerFor=typeof({
-		foreach(i,uda;udas)
-			static if(isSamplerFor!(method,parameter,uda)) return uda();
-		static if(!is(typeof(return))) return useDefault!parameter();
-		assert(0);
-	}());
+	alias pred(alias sampler)=isSamplerFor!(method,parameter,sampler);
+	alias obtainSamplerFor=Filter!(pred,udas,useDefault!parameter)[0];
 }
 
 template isSamplerFor(alias method, string parameter, alias sampler){

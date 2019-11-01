@@ -1,7 +1,8 @@
 module datatypes;
 import std.conv, std.random;
 
-import annotations;
+//public import annotations;
+mixin(import("annotations.d")); // work around DMD forward reference bug
 
 struct Set(T){
 	void[0][T] elems;
@@ -88,21 +89,6 @@ struct MaxRegister(T){
 	T get(){ return value; }
 	T set(T v){ auto r=value; if(v>value) value=v; return r; }
 }
-
-int construct(T)(int lower=int.min,int upper=int.max)if(is(T==int)){
-	if(lower>=upper) upper=lower+1; // TODO: ok?
-	static int[] values;
-	if(lower==int.min&&upper==int.max){
-		if(values.length&&!uniform(0,10)) return values[uniform(0,$)];
-	}
-	if(values.length>100){ values.length=0; values.assumeSafeAppend(); }
-	//enum low=-100,up=100;
-	import options;
-	enum low=intSamplingRange[0],up=intSamplingRange[1]; // !!!
-	values~=uniform!"[)"(max(lower,low),min(upper,up+1));
-	return values[$-1];
-}
-bool construct(T)()if(is(T==bool)){ return !!uniform(0,2); }
 
 import std.algorithm: min, max;
 
