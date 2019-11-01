@@ -2,6 +2,11 @@
 .#*
 *.o
 *~
-mining
+mine
 bin
 core
+*.zip
+*.exe
+*.obj
+dmd*
+ldc2-*

@@ -118,7 +118,7 @@ int construct(T)(int lower=int.min,int upper=int.max)if(is(T==int)){
 	}
 	if(values.length>100){ values.length=0; values.assumeSafeAppend(); }
 	//enum low=-100,up=100;
-	import options;
+	import mine;
 	enum low=intSamplingRange[0],up=intSamplingRange[1]; // !!!
 	values~=uniform!"[)"(max(lower,low),min(upper,up+1));
 	return values[$-1];

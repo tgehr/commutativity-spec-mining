@@ -1,6 +1,6 @@
 import std.array, std.algorithm, std.stdio;
 import std.datetime.stopwatch, std.typecons: Q=Tuple,q=tuple;
-import mine, formula, options;
+import mine, explore, formula;
 import hashtable, util;
 
 
@@ -32,7 +32,7 @@ auto inferOccamSpecCommon(alias s,alias addOccamResult,T,string m1,string m2,boo
 	return f;
 }
 
-auto inferOccamSpecAdaptive(alias s,alias addOccamResult,T,string m1,string m2,bool invertStore)(){
+auto inferOccamSpecAdaptive(alias s,alias addOccamResult,T,string m1,string m2,bool invertStore=false)(){
 	int numSamples=5000;
 	auto state=ExplorationState!(T,m1,m2,addOccamResult)(0);
 	for(Formula last=null;;numSamples*=2){

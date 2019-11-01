@@ -1,7 +1,7 @@
 
-import std.stdio, std.datetime, std.traits, std.algorithm, std.array, std.conv;
+import std.stdio, std.datetime.stopwatch, std.traits, std.algorithm, std.array, std.conv;
 
-import datatypes,mine,formula,occam,util;
+import datatypes,explore,formula,occam,util;
 
 struct TimedSpec{
 	Formula formula;
@@ -61,7 +61,7 @@ auto inferTimedOccamSpec(T, string m1, string m2)(int numSamples=0, int searchTi
 	}
 	StopWatch swExploration, swSearch;
 	//runExploration!(T,m1,m2,addOccamResult)(numSamples);
-	static auto inferOccamSpecAdaptive(alias s,alias addOccamResult,T,string m1,string m2)(){
+	auto inferOccamSpecAdaptive(alias s,alias addOccamResult,T,string m1,string m2)(){
 		int numSamples=5000;
 		auto state=ExplorationState!(T,m1,m2,addOccamResult)(0);
 		for(Formula last=null;;numSamples*=2){
@@ -81,7 +81,7 @@ auto inferTimedOccamSpec(T, string m1, string m2)(int numSamples=0, int searchTi
 			last=f;
 		}
 	}
-	static auto inferOccamSpecCommon(alias s,alias addOccamResult,T,string m1,string m2)(int numSamples){
+	auto inferOccamSpecCommon(alias s,alias addOccamResult,T,string m1,string m2)(int numSamples){
 		if(!numSamples) return inferOccamSpecAdaptive!(s,addOccamResult,T,m1,m2)();
 		swExploration.start();
 		runExploration!(T,m1,m2,addOccamResult)(numSamples);
@@ -583,7 +583,7 @@ void performMeasurements(alias measure)(){
 }
 
 enum datetag=(__DATE__~__TIME__).filter!(c=>c!=' '&&c!='\t'&&c!=':').to!string;
-import options;
+import mine;
 void runExperiments()(){
 	static if(manualOutputRedirect) f=File("results"~datetag~".txt","w");
 	//writeln(runWithTimeout!({ writeln("finished"); return 0; })(1));
@@ -697,7 +697,7 @@ void countTypes(T, string m1, string m2)(int numSamples=5000, int searchTimeout=
 
 static if(manualOutputRedirect){
 	File f;
-	void writeln(T...)(T args){ // wtf? why doesn't tee work?
+	void writeln(T...)(T args){ // why doesn't tee work?
 		f.writeln(args);
 		std.stdio.writeln(args);
 		f.flush();
